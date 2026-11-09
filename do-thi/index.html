@@ -243,9 +243,12 @@
     <div class="card">
         <div class="controls-header">
             <h2 style="border:none; margin:0; padding:0;">Đồ Thị Hàm Số</h2>
-            <div style="display:flex; gap:6px;">
-                <button class="btn-secondary" onclick="zoomIn()">➕ Phóng to</button>
-                <button class="btn-secondary" onclick="zoomOut()">➖ Thu nhỏ</button>
+            <div style="display:flex; gap:5px; flex-wrap:wrap; align-items:center;">
+                <button class="btn-secondary" onclick="autoCenterGraph()" title="Tự động căn đồ thị vào chính giữa" style="background:#eff6ff; color:#0070C0; font-weight:700; border:1px solid #93c5fd; padding:4px 9px; border-radius:6px; cursor:pointer; font-size:0.85rem;">🎯 Căn Giữa</button>
+                <button class="btn-secondary" onclick="centerOrigin()" title="Đưa gốc tọa độ O(0,0) về chính giữa" style="padding:4px 8px; border-radius:6px; cursor:pointer; font-weight:600; font-size:0.85rem;">⚖️ Tâm O</button>
+                <button class="btn-secondary" onclick="zoomIn()" title="Phóng to" style="padding:4px 8px; font-size:0.85rem;">➕</button>
+                <button class="btn-secondary" onclick="zoomOut()" title="Thu nhỏ" style="padding:4px 8px; font-size:0.85rem;">➖</button>
+                <button class="btn-secondary" onclick="resetView()" title="Reset" style="padding:4px 8px; font-size:0.85rem;">🔄</button>
             </div>
         </div>
         
@@ -772,6 +775,96 @@
         }
         board.update();
         updateTangentText();
+    }
+
+    
+    function getOptimalBoundingBox() {
+        let type = document.getElementById('func-type').value;
+        let pA = parseInput(document.getElementById('coef-a').value);
+        let pB = parseInput(document.getElementById('coef-b').value);
+        let pC = parseInput(document.getElementById('coef-c').value);
+        let pD = parseInput(document.getElementById('coef-d').value);
+        let pE = parseInput(document.getElementById('coef-e').value);
+
+        let a = pA.val, b = pB.val, c = pC.val, d = pD.val, e = pE.val;
+        let xCenter = 0, yCenter = 0, radius = 6.5;
+
+        if (type === 'cubic' && Math.abs(a) > 1e-6) {
+            let x_u = -b / (3 * a);
+            let y_u = a * Math.pow(x_u, 3) + b * Math.pow(x_u, 2) + c * x_u + d;
+            let delta_p = b * b - 3 * a * c;
+            if (delta_p > 0) {
+                let dx = Math.sqrt(delta_p) / (3 * Math.abs(a));
+                let x1 = x_u - dx, x2 = x_u + dx;
+                let y1 = a * Math.pow(x1, 3) + b * Math.pow(x1, 2) + c * x1 + d;
+                let y2 = a * Math.pow(x2, 3) + b * Math.pow(x2, 2) + c * x2 + d;
+
+                let allX = [x1, x2, x_u, 0];
+                let allY = [y1, y2, y_u, 0];
+                let minX = Math.min(...allX), maxX = Math.max(...allX);
+                let minY = Math.min(...allY), maxY = Math.max(...allY);
+
+                xCenter = (minX + maxX) / 2;
+                yCenter = (minY + maxY) / 2;
+                let spanX = maxX - minX;
+                let spanY = maxY - minY;
+                radius = Math.max(spanX, spanY) * 0.72 + 1.8;
+            } else {
+                xCenter = x_u * 0.5;
+                yCenter = y_u * 0.5;
+                radius = Math.max(Math.abs(x_u), Math.abs(y_u), 4) + 2.5;
+            }
+        } else if (type === 'quartic' && Math.abs(a) > 1e-6) {
+            xCenter = 0;
+            let y0 = c;
+            if (a * b < 0) {
+                let x_ct = Math.sqrt(-b / (2 * a));
+                let y_ct = a * Math.pow(x_ct, 4) + b * Math.pow(x_ct, 2) + c;
+                yCenter = (y0 + y_ct) / 2;
+                let spanY = Math.abs(y0 - y_ct);
+                radius = Math.max(x_ct * 2, spanY, 4) * 0.8 + 1.8;
+            } else {
+                yCenter = y0;
+                radius = Math.max(Math.abs(y0), 4) + 2.5;
+            }
+        } else if (type === 'frac11' && Math.abs(c) > 1e-6) {
+            let x_i = -d / c;
+            let y_i = a / c;
+            xCenter = x_i;
+            yCenter = y_i;
+            radius = Math.max(Math.abs(x_i) + 4, Math.abs(y_i) + 4, 6);
+        } else if (type === 'frac21' && Math.abs(d) > 1e-6) {
+            let x_i = -e / d;
+            let y_i = (a / d) * x_i + (b * d - a * e) / (d * d);
+            xCenter = x_i;
+            yCenter = y_i;
+            radius = Math.max(Math.abs(x_i) + 4, Math.abs(y_i) + 4, 6);
+        }
+
+        radius = Math.min(Math.max(radius, 4.5), 14);
+        return [xCenter - radius, yCenter + radius, xCenter + radius, yCenter - radius];
+    }
+
+    function autoCenterGraph() {
+        let bbox = getOptimalBoundingBox();
+        board.setBoundingBox(bbox, true);
+    }
+
+    function centerOrigin() {
+        board.setBoundingBox([-8, 8, 8, -8], true);
+    }
+
+    function resetView() {
+        autoCenterGraph();
+    }
+
+    function panBoard(dx, dy) {
+        let bbox = board.getBoundingBox();
+        let w = bbox[2] - bbox[0];
+        let h = bbox[1] - bbox[3];
+        let stepX = (w * 0.15) * dx;
+        let stepY = (h * 0.15) * dy;
+        board.setBoundingBox([bbox[0] + stepX, bbox[1] + stepY, bbox[2] + stepX, bbox[3] + stepY], true);
     }
 
     function zoomIn() { board.zoomIn(); }

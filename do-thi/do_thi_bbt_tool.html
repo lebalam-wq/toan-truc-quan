@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Khảo Sát & Vẽ Đồ Thị Hàm Số 12 GDPT 2018 | Toán Trực Quan - Thầy Lê Bá Lâm</title>
+    
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css" />
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <script>
+        MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root { 
+            --primary: #2563eb;
+            --bg: #f8fafc; 
+            --panel: #ffffff; 
+            --text: #1e293b; 
+            --border: #e2e8f0;
+            --input-bg: #ffffff;
+            --input-border: #cbd5e1;
+            --formula-bg: #eff6ff;
+            --toggle-bg: #f1f5f9;
+            --bbt-border: #1e293b;
+            --bbt-bg: #ffffff;
+        }
+
+        body.dark-mode {
+            --primary: #3b82f6;
+            --bg: #0f172a; 
+            --panel: #1e293b; 
+            --text: #f8fafc; 
+            --border: #334155;
+            --input-bg: #0f172a;
+            --input-border: #475569;
+            --formula-bg: #172554;
+            --toggle-bg: #334155;
+            --bbt-border: #94a3b8;
+            --bbt-bg: #1e293b;
+        }
+
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg); color: var(--text); margin: 0; padding: 20px; transition: background-color 0.3s, color 0.3s;
+        }
+        .header { max-width: 1220px; margin: 0 auto 20px auto; display: flex;
+            justify-content: space-between; align-items: center; }
+        .header h1 { margin: 0; font-size: 1.5rem;
+            color: var(--primary); }
+        .container { max-width: 1220px; margin: 0 auto; display: grid;
+            grid-template-columns: 460px 1fr; gap: 20px; align-items: start; }
+        @media (max-width: 980px) { .container { grid-template-columns: 1fr;
+            } }
+        
+        .card { background: var(--panel);
+            border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); transition: background-color 0.3s;
+        }
+        h2 { margin-top: 0; color: var(--primary); font-size: 1.15rem; border-bottom: 2px solid var(--border);
+            padding-bottom: 8px; }
+        
+        .select-group { margin-bottom: 15px;
+        }
+        .select-group label { font-weight: 600; font-size: 0.9rem; display: block; margin-bottom: 6px;
+        }
+        select { width: 100%; padding: 8px 12px; border-radius: 6px;
+            border: 1px solid var(--input-border); font-size: 0.95rem; background-color: var(--input-bg); color: var(--text); outline: none; cursor: pointer; transition: 0.3s;
+        }
+        
+        .input-group { display: grid;
+            grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
+        .input-field { display: flex;
+            flex-direction: column; background: var(--toggle-bg); padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); transition: 0.3s;
+        }
+        .input-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;
+        }
+        .input-header label { font-weight: 600; font-size: 0.85rem;
+        }
+        .input-header input[type="text"] { width: 60px; padding: 3px 5px; border: 1px solid var(--input-border);
+            border-radius: 6px; font-size: 0.85rem; text-align: center; background: var(--input-bg); color: var(--text);
+        }
+        input[type="range"] { width: 100%; margin-top: 4px; cursor: pointer; accent-color: var(--primary);
+        }
+        
+        .btn-main-group { display: grid;
+            grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        button { background-color: var(--primary);
+            color: white; border: none; padding: 9px 12px; border-radius: 6px; font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: background 0.2s;
+        }
+        button:hover { filter: brightness(1.1);
+        }
+        .btn-secondary { background-color: #64748b;
+        }
+        .btn-action { background-color: #059669;
+        } 
+        .btn-theme { background-color: transparent; border: 1px solid var(--border); color: var(--text);
+        }
+        .btn-theme:hover { background-color: var(--toggle-bg); filter: none;
+        }
+        
+        .formula-display { background: var(--formula-bg);
+            padding: 10px; border-radius: 6px; text-align: center; margin: 15px 0 5px 0; font-size: 1.1rem; min-height: 45px; display: flex; align-items: center;
+            justify-content: center; overflow-x: auto; transition: 0.3s; }
+        #tangent-info { text-align: center; font-size: 1.05rem;
+            font-weight: bold; margin-bottom: 15px; min-height: 24px; transition: color 0.2s; }
+        
+        .bbt-container { margin-top: 15px;
+            overflow-x: auto; }
+        
+        .controls-header { display: flex;
+            justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .toggle-group { display: flex; gap: 12px;
+            align-items: center; flex-wrap: wrap; background: var(--toggle-bg); padding: 10px 14px; border-radius: 8px; margin-bottom: 15px; font-size: 0.85rem; font-weight: 500; transition: 0.3s;
+        }
+        .toggle-group label { display: flex; align-items: center; gap: 5px; cursor: pointer;
+        }
+        
+        .board-wrapper { position: relative;
+            width: 100%; max-width: 650px; margin: 0 auto; background: #ffffff; padding: 8px; border-radius: 10px; box-shadow: inset 0 0 0 1px var(--border);
+        }
+        #jxgbox { width: 100%; aspect-ratio: 1 / 1; border-radius: 8px;
+            background-color: #ffffff !important; }
+    </style>
+</head>
+<body>
+
+<div class="header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; padding-bottom: 14px; border-bottom: 1px solid var(--border);">
+    <div style="display: flex; flex-direction: column; gap: 4px;">
+        <div style="font-size: 0.85rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.6px; display: flex; align-items: center; gap: 6px;">
+            <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></span>
+            Toán Trực Quan • Thầy Lê Bá Lâm — Trường THPT A Túc
+        </div>
+        <h1 style="margin: 0; font-size: 1.55rem; color: var(--text);">Khảo Sát & Vẽ Đồ Thị Hàm Số 12</h1>
+    </div>
+    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <a href="../" class="btn-secondary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; font-size: 0.88rem; font-weight: 600; border-radius: 6px; border: 1px solid var(--border); background: var(--panel); color: var(--text);">
+            ← Về Portal Toán Trực Quan
+        </a>
+        <button id="exam-btn" class="btn-secondary" onclick="toggleExamMode()" style="font-weight: 700; border: 1.5px solid #0070C0; color: #0070C0; background: #eff6ff; display: inline-flex; align-items: center; gap: 5px; padding: 7px 14px; border-radius: 6px; cursor: pointer;">
+            📄 Chuẩn Đề Thi Word
+        </button>
+        <button id="theme-btn" class="btn-theme" onclick="toggleTheme()" style="padding: 7px 14px; border-radius: 6px; font-weight: 600; cursor: pointer;">🌙 Nền Tối</button>
+    </div>
+</div>
+
+<div class="container">
+    <div class="card">
+        <h2>Cấu Hình Hàm Số</h2>
+
+        <!-- Presets Bar -->
+        <div style="margin-bottom: 14px; padding: 10px 12px; border-radius: 8px; background: var(--toggle-bg); border: 1px solid var(--border);">
+            <div style="font-size: 0.82rem; font-weight: 700; color: var(--text); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">⚡ Mẫu hàm thi hay gặp:</div>
+            <div id="preset-buttons" style="display: flex; flex-wrap: wrap; gap: 6px;"></div>
+        </div>
+
+        <div class="select-group">
+            <label for="func-type">1. Chọn dạng hàm gốc f(x):</label>
+            <select id="func-type" onchange="onTypeChange()">
+                <option value="cubic">1. Hàm Bậc 3: y = ax³ + bx² + cx + d</option>
+                <option value="quartic">2. Hàm Trùng Phương: y = ax⁴ + bx² + c</option>
+                <option value="frac11">3. Hàm Nhất Biến: y = (ax + b) / (cx + d)</option>
+                <option value="frac21">4. Hàm Phân Thức: y = (ax² + bx + c) / (dx + e)</option>
+            </select>
+        </div>
+
+        <div class="select-group">
+            <label for="abs-type">2. Dạng trị tuyệt đối:</label>
+            <select id="abs-type" onchange="updateAll()">
+                <option value="none">Không áp dụng: y = f(x)</option>
+                <option value="abs_f">Dạng 1: y = |f(x)| (Lấy đối xứng qua Ox)</option>
+                <option value="abs_x">Dạng 2: y = f(|x|) (Lấy đối xứng qua Oy)</option>
+                <option value="abs_both">Dạng 3: y = |f(|x|)| (Kết hợp cả hai)</option>
+            </select>
+        </div>
+        
+        <div class="input-group">
+            <div class="input-field" id="box-a">
+                <div class="input-header"><label>Hệ số a</label><input type="text" id="coef-a" value="1/3" onchange="syncSliderFromText('a')"></div>
+                <input type="range" id="slider-a" min="-5" max="5" step="0.1" value="0.33" oninput="syncTextFromSlider('a')">
+            </div>
+            <div class="input-field" id="box-b">
+                <div class="input-header"><label>Hệ số b</label><input type="text" id="coef-b" value="0" onchange="syncSliderFromText('b')"></div>
+                <input type="range" id="slider-b" min="-10" max="10" step="0.1" value="0" oninput="syncTextFromSlider('b')">
+            </div>
+            <div class="input-field" id="box-c">
+                <div class="input-header"><label>Hệ số c</label><input type="text" id="coef-c" value="-1" onchange="syncSliderFromText('c')"></div>
+                <input type="range" id="slider-c" min="-10" max="10" step="0.1" value="-1" oninput="syncTextFromSlider('c')">
+            </div>
+            <div class="input-field" id="box-d">
+                <div class="input-header"><label>Hệ số d</label><input type="text" id="coef-d" value="1" onchange="syncSliderFromText('d')"></div>
+                <input type="range" id="slider-d" min="-10" max="10" step="0.1" value="1" oninput="syncTextFromSlider('d')">
+            </div>
+            <div class="input-field" id="box-e" style="display:none;">
+                <div class="input-header"><label>Hệ số e</label><input type="text" id="coef-e" value="-1" onchange="syncSliderFromText('e')"></div>
+                <input type="range" id="slider-e" min="-10" max="10" step="0.1" value="-1" oninput="syncTextFromSlider('e')">
+            </div>
+        </div>
+
+        <div class="btn-main-group">
+            <button style="grid-column: span 2;" onclick="updateAll()">🔄 Cập nhật Đồ thị</button>
+            <button class="btn-action" onclick="exportPNG()">📸 Tải ảnh PNG</button>
+            <button class="btn-secondary" onclick="resetView()">🎯 Reset Góc Nhìn</button>
+        </div>
+
+        <div class="formula-display" id="math-formula"></div>
+        <div id="tangent-info"></div>
+
+        <!-- Biện luận tương giao y = m -->
+        <div class="tuong-giao-card" style="margin-top: 14px; padding: 12px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--toggle-bg);">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <label style="font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; color: var(--text); font-size: 0.95rem;">
+                    <input type="checkbox" id="chk-tuong-giao" onchange="toggleTuongGiao()">
+                    <span>Biện luận tương giao đường thẳng <span style="font-family:'Times New Roman', serif; font-style:italic; font-weight:bold;">y = m</span></span>
+                </label>
+                <span id="m-display-badge" style="font-family:'Times New Roman', serif; font-size:1.05rem; font-weight:700; color: #ea580c; display: none;">m = 0.00</span>
+            </div>
+            <div id="tuong-giao-controls" style="display:none; margin-top: 10px;">
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+                    <span style="font-size:0.85rem; font-weight:600; color:var(--text);">m:</span>
+                    <input type="range" id="slider-m" min="-8" max="8" step="0.1" value="0" style="flex:1;" oninput="syncMFromSlider()">
+                    <input type="number" id="input-m" value="0" step="0.1" style="width:70px; padding:4px 6px; border:1px solid var(--input-border); border-radius:4px; text-align:center; font-weight:600; background:var(--input-bg); color:var(--text);" onchange="syncMFromInput()">
+                </div>
+                <div id="tuong-giao-result" style="font-size:0.88rem; font-weight:600; padding:7px 10px; border-radius:6px; background:var(--panel); border:1px solid var(--border); color:var(--text);">
+                    Số giao điểm: <span id="so-nghiem-text" style="color:#ea580c; font-weight:700;">Chưa kích hoạt</span>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 18px; margin-bottom: 8px;">
+            <h2 style="margin: 0; padding: 0; border: none; font-size: 1.15rem;">Bảng Biến Thiên Hàm Gốc</h2>
+            <button class="btn-secondary" onclick="exportBBTPNG()" style="padding: 4px 10px; font-size: 0.82rem; font-weight: 700; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--border); cursor: pointer;">
+                📋 Tải Ảnh BBT (PNG)
+            </button>
+        </div>
+        <div class="bbt-container" id="bbt-output"></div>
+    </div>
+
+    <div class="card">
+        <div class="controls-header">
+            <h2 style="border:none; margin:0; padding:0;">Đồ Thị Hàm Số</h2>
+            <div style="display:flex; gap:5px; flex-wrap:wrap; align-items:center;">
+                <button class="btn-secondary" onclick="autoCenterGraph()" title="Tự động căn đồ thị vào chính giữa" style="background:#eff6ff; color:#0070C0; font-weight:700; border:1px solid #93c5fd; padding:4px 9px; border-radius:6px; cursor:pointer; font-size:0.85rem;">🎯 Căn Giữa</button>
+                <button class="btn-secondary" onclick="centerOrigin()" title="Đưa gốc tọa độ O(0,0) về chính giữa" style="padding:4px 8px; border-radius:6px; cursor:pointer; font-weight:600; font-size:0.85rem;">⚖️ Tâm O</button>
+                <button class="btn-secondary" onclick="zoomIn()" title="Phóng to" style="padding:4px 8px; font-size:0.85rem;">➕</button>
+                <button class="btn-secondary" onclick="zoomOut()" title="Thu nhỏ" style="padding:4px 8px; font-size:0.85rem;">➖</button>
+                <button class="btn-secondary" onclick="resetView()" title="Reset" style="padding:4px 8px; font-size:0.85rem;">🔄</button>
+            </div>
+        </div>
+        
+        <div class="toggle-group">
+            <label id="lbl-chk-extrema"><input type="checkbox" id="chk-extrema" checked onchange="toggleVisibility()"><span style="color:#ef4444;">●</span> Cực trị</label>
+            <label id="lbl-chk-inflection"><input type="checkbox" id="chk-inflection" checked onchange="toggleVisibility()"><span style="color:#f59e0b;">●</span> Điểm uốn</label>
+            <label id="lbl-chk-asymptote" style="display:none;"><input type="checkbox" id="chk-asymptote" checked onchange="toggleVisibility()"><span style="color:#8b5cf6;">- -</span> Tiệm cận</label>
+            <label><input type="checkbox" id="chk-ox" checked onchange="toggleVisibility()"><span style="color:#10b981;">●</span> Giao Ox</label>
+            <label><input type="checkbox" id="chk-oy" checked onchange="toggleVisibility()"><span style="color:#3b82f6;">●</span> Giao Oy</label>
+            <label><input type="checkbox" id="chk-tangent" checked onchange="toggleVisibility()"><span style="color:#d946ef;">/</span> Tiếp tuyến</label>
+<label><input type="checkbox" id="chk-grid" onchange="toggleVisibility()"><span style="color:#94a3b8;">▦</span> Lưới</label>        
+</div>
+
+        <div class="board-wrapper" id="capture-area">
+            <div id="jxgbox" class="jxgbox"></div>
+        </div>
+
+        <!-- Action Buttons Bar -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px;">
+            <button class="btn-action" onclick="exportExamPNG()" style="background: linear-gradient(135deg, #0284c7, #0070C0); color:#fff; font-weight:700; padding:10px 14px; border:none; border-radius:6px; cursor:pointer; font-size:0.92rem; display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 2px 8px rgba(0, 112, 192, 0.25);">
+                📄 Xuất Ảnh Chuẩn Đề Thi Word (300 DPI)
+            </button>
+            <button class="btn-action" onclick="exportColorPNG()" style="background: #10b981; color:#fff; font-weight:700; padding:10px 14px; border:none; border-radius:6px; cursor:pointer; font-size:0.92rem; display:flex; align-items:center; justify-content:center; gap:6px;">
+                📸 Tải Ảnh Trực Quan Màu
+            </button>
+        </div>
+        <div style="margin-top: 10px; padding: 10px 12px; border-radius: 6px; background: var(--formula-bg); border-left: 4px solid var(--primary); font-size: 0.85rem; line-height: 1.45; color: var(--text);">
+            💡 <b>Mẹo biên soạn đề thi:</b> Bấm <i>"Chuẩn Đề Thi Word"</i> ở góc trên để đồ thị tự động chuyển sang nét đen mực in chuẩn Bộ/Sở (ẩn lưới, dóng cực trị nét đứt, font Times New Roman). Sau đó bấm nút <b>Xuất Ảnh Chuẩn Đề Thi Word</b> để tải ảnh PNG sắc nét chèn thẳng vào cột 2 đề thi Word!
+        </div>
+    </div>
+</div>
+
+<footer style="margin-top: 30px; padding: 20px 0; border-top: 1px solid var(--border); text-align: center; font-size: 0.88rem; color: #64748b; line-height: 1.6;">
+    <div style="font-weight: 700; color: var(--text); margin-bottom: 4px;">Hệ Thống Trực Quan Hóa Đồ Thị & Bảng Biến Thiên Toán 12 GDPT 2018</div>
+    <div>Phát triển bởi <b>Thầy Lê Bá Lâm</b> — Tổ Toán - Tin, Trường THPT A Túc, Tỉnh Quảng Trị</div>
+    <div style="margin-top: 6px;">
+        <a href="https://www.youtube.com/@ToanTrucQuanVN" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 600;">YouTube @ToanTrucQuanVN</a> • 
+        <a href="https://lebalam-wq.github.io/toan-truc-quan/" style="color: var(--primary); text-decoration: none; font-weight: 600;">Portal lebalam-wq.github.io/toan-truc-quan</a>
+    </div>
+</footer>
+
+<script>
+    function toggleTheme() {
+        document.body.classList.toggle('dark-mode');
+        const isDark = document.body.classList.contains('dark-mode');
+        document.getElementById('theme-btn').innerText = isDark ? '☀️ Nền Sáng' : '🌙 Nền Tối';
+    }
+
+    const DEFAULT_BOUNDING_BOX = [-8, 8, 8, -8];
+
+    // --- NÂNG CẤP BỞI THẦY LÊ BÁ LÂM & MAI LINH ---
+    let isExamMode = false;
+    let currentFVal = null;
+    let mLine = null;
+    let mPoints = [];
+    let mText = null;
+
+    const PRESETS = {
+        cubic: [
+            { name: "2 Cực trị (a > 0)", vals: { a: "1/3", b: "0", c: "-1", d: "1" } },
+            { name: "2 Cực trị (a < 0)", vals: { a: "-1", b: "3", c: "0", d: "-1" } },
+            { name: "Đơn điệu tăng", vals: { a: "1/3", b: "0", c: "1", d: "0" } },
+            { name: "Có uốn trên Ox", vals: { a: "1", b: "-3", c: "0", d: "2" } }
+        ],
+        quartic: [
+            { name: "3 Cực trị hình W", vals: { a: "1", b: "-2", c: "-1" } },
+            { name: "3 Cực trị hình M", vals: { a: "-1", b: "2", c: "1" } },
+            { name: "1 Cực trị đáy", vals: { a: "1", b: "2", c: "-1" } },
+            { name: "1 Cực trị đỉnh", vals: { a: "-1", b: "-1", c: "2" } }
+        ],
+        frac11: [
+            { name: "Đồng biến (ad-bc>0)", vals: { a: "2", b: "-1", c: "1", d: "1" } },
+            { name: "Nghịch biến (ad-bc<0)", vals: { a: "-1", b: "2", c: "1", d: "-1" } },
+            { name: "TCĐ x=2, TCN y=1", vals: { a: "1", b: "1", c: "1", d: "-2" } },
+            { name: "Tâm I(-1; 2)", vals: { a: "2", b: "3", c: "1", d: "1" } }
+        ],
+        frac21: [
+            { name: "2 Cực trị (a>0)", vals: { a: "1", b: "-1", c: "1", d: "1", e: "-1" } },
+            { name: "2 Cực trị (a<0)", vals: { a: "-1", b: "2", c: "-4", d: "1", e: "-2" } },
+            { name: "Không cực trị", vals: { a: "1", b: "1", c: "1", d: "1", e: "0" } }
+        ]
+    };
+
+    function renderPresets(type) {
+        let container = document.getElementById('preset-buttons');
+        if (!container) return;
+        container.innerHTML = "";
+        let list = PRESETS[type] || [];
+        list.forEach((item, idx) => {
+            let btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn-secondary';
+            btn.style.cssText = "padding: 4px 8px; font-size: 0.8rem; border-radius: 4px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--panel); color: var(--text);";
+            btn.innerText = item.name;
+            btn.onclick = () => applyPreset(item.vals);
+            container.appendChild(btn);
+        });
+    }
+
+    function applyPreset(vals) {
+        ['a', 'b', 'c', 'd', 'e'].forEach(p => {
+            if (vals[p] !== undefined) {
+                document.getElementById(`coef-${p}`).value = vals[p];
+                syncSliderFromText(p);
+            }
+        });
+        updateAll();
+    }
+
+    function toggleExamMode() {
+        isExamMode = !isExamMode;
+        let btn = document.getElementById('exam-btn');
+        if (isExamMode) {
+            btn.style.background = "#0070C0";
+            btn.style.color = "#ffffff";
+            btn.innerHTML = "✓ Đang Chế Độ Đề Thi (Mực Đen)";
+            document.getElementById('chk-grid').checked = false;
+            document.getElementById('chk-tangent').checked = false;
+        } else {
+            btn.style.background = "#eff6ff";
+            btn.style.color = "#0070C0";
+            btn.innerHTML = "📄 Chuẩn Đề Thi Word";
+        }
+        updateAll();
+    }
+
+    function toggleTuongGiao() {
+        let chk = document.getElementById('chk-tuong-giao');
+        let controls = document.getElementById('tuong-giao-controls');
+        let badge = document.getElementById('m-display-badge');
+        if (chk.checked) {
+            controls.style.display = 'block';
+            badge.style.display = 'inline-block';
+            updateTuongGiao();
+        } else {
+            controls.style.display = 'none';
+            badge.style.display = 'none';
+            clearTuongGiaoObjects();
+        }
+    }
+
+    function syncMFromSlider() {
+        let val = parseFloat(document.getElementById('slider-m').value) || 0;
+        document.getElementById('input-m').value = val.toFixed(1);
+        updateTuongGiao();
+    }
+
+    function syncMFromInput() {
+        let val = parseFloat(document.getElementById('input-m').value) || 0;
+        document.getElementById('slider-m').value = val;
+        updateTuongGiao();
+    }
+
+    function clearTuongGiaoObjects() {
+        if (mLine) { board.removeObject(mLine); mLine = null; }
+        if (mText) { board.removeObject(mText); mText = null; }
+        mPoints.forEach(pt => board.removeObject(pt));
+        mPoints = [];
+    }
+
+    function findRootsOfFMinusM(mVal) {
+        if (typeof currentFVal !== 'function') return [];
+        let roots = [];
+        let xMin = -9.0, xMax = 9.0;
+        let steps = 400;
+        let dx = (xMax - xMin) / steps;
+        let prevX = xMin;
+        let prevY = currentFVal(prevX) - mVal;
+
+        for (let i = 1; i <= steps; i++) {
+            let curX = xMin + i * dx;
+            let curY = currentFVal(curX) - mVal;
+
+            if (isNaN(prevY) || isNaN(curY) || Math.abs(prevY) > 60 || Math.abs(curY) > 60) {
+                prevX = curX;
+                prevY = curY;
+                continue;
+            }
+
+            if (prevY * curY <= 0) {
+                let x0 = prevX, x1 = curX;
+                for (let k = 0; k < 14; k++) {
+                    let mid = (x0 + x1) / 2;
+                    let midY = currentFVal(mid) - mVal;
+                    if (Math.abs(midY) < 1e-6) { x0 = mid; break; }
+                    if (prevY * midY <= 0) x1 = mid;
+                    else { x0 = mid; prevY = midY; }
+                }
+                let root = (x0 + x1) / 2;
+                if (Math.abs(currentFVal(root) - mVal) < 0.25) {
+                    if (roots.length === 0 || Math.abs(root - roots[roots.length - 1]) > 0.08) {
+                        roots.push(root);
+                    }
+                }
+            }
+            prevX = curX;
+            prevY = curY;
+        }
+        return roots;
+    }
+
+    function updateTuongGiao() {
+        let chk = document.getElementById('chk-tuong-giao');
+        if (!chk || !chk.checked) return;
+
+        let mVal = parseFloat(document.getElementById('slider-m').value) || 0;
+        document.getElementById('m-display-badge').innerText = `m = ${mVal.toFixed(2)}`;
+
+        clearTuongGiaoObjects();
+
+        let lineColor = isExamMode ? "#000000" : "#ea580c";
+        let lineDash = isExamMode ? 2 : 0;
+
+        mLine = board.create('line', [[0, mVal], [1, mVal]], {
+            strokeColor: lineColor,
+            strokeWidth: 2,
+            dash: lineDash,
+            name: '',
+            fixed: true
+        });
+
+        mText = board.create('text', [6.5, mVal + 0.35, `d: y = ${mVal.toFixed(2)}`], {
+            fontSize: 13,
+            color: lineColor,
+            fixed: true,
+            display: 'internal'
+        });
+
+        let roots = findRootsOfFMinusM(mVal);
+        let resBox = document.getElementById('so-nghiem-text');
+
+        if (roots.length === 0) {
+            resBox.innerHTML = `<b>0 giao điểm</b> (Phương trình vô nghiệm tại m = ${mVal.toFixed(2)})`;
+        } else {
+            let xList = roots.map(r => r.toFixed(2)).join('; ');
+            resBox.innerHTML = `<b>${roots.length} giao điểm</b> tại x ∈ { ${xList} }`;
+            roots.forEach((rx, idx) => {
+                let pt = board.create('point', [rx, mVal], {
+                    name: `M${idx + 1}(${rx.toFixed(2)}; ${mVal.toFixed(2)})`,
+                    size: isExamMode ? 2.5 : 3.5,
+                    color: isExamMode ? "#000000" : "#ea580c",
+                    fixed: true
+                });
+                mPoints.push(pt);
+            });
+        }
+    }
+
+    function exportExamPNG() {
+        let wasExam = isExamMode;
+        if (!isExamMode) {
+            isExamMode = true;
+            document.getElementById('chk-grid').checked = false;
+            document.getElementById('chk-tangent').checked = false;
+            updateAll();
+        }
+        const area = document.getElementById('capture-area');
+        if (!area) return;
+        html2canvas(area, {
+            scale: 3,
+            backgroundColor: '#ffffff',
+            useCORS: true,
+            logging: false
+        }).then(canvas => {
+            const link = document.createElement('a');
+            let type = document.getElementById('func-type').value;
+            link.download = `dothi_toan12_${type}_chuan_de_thi.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            if (!wasExam) {
+                isExamMode = false;
+                updateAll();
+            }
+        });
+    }
+
+    function exportColorPNG() {
+        const area = document.getElementById('capture-area');
+        if (!area) return;
+        let isDark = document.body.classList.contains('dark-mode');
+        html2canvas(area, {
+            scale: 2,
+            backgroundColor: isDark ? '#1e293b' : '#ffffff',
+            useCORS: true,
+            logging: false
+        }).then(canvas => {
+            const link = document.createElement('a');
+            let type = document.getElementById('func-type').value;
+            link.download = `dothi_toan12_${type}_mau.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        });
+    }
+
+    function exportBBTPNG() {
+        const bbtArea = document.getElementById('bbt-output');
+        if (!bbtArea) return;
+        html2canvas(bbtArea, {
+            scale: 3,
+            backgroundColor: '#ffffff',
+            useCORS: true,
+            logging: false
+        }).then(canvas => {
+            const link = document.createElement('a');
+            let type = document.getElementById('func-type').value;
+            link.download = `bang_bien_thien_toan12_${type}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        });
+    }
+
+    let board = JXG.JSXGraph.initBoard('jxgbox', {
+        boundingbox: DEFAULT_BOUNDING_BOX,
+        axis: false, showCopyright: false, keepaspectratio: true, showInfobox: true,
+        zoom: { wheel: false, enabled: true }, pan: { enabled: false }
+    });
+   let xAxis = board.create('axis', [[0, 0], [1, 0]], { 
+        name: 'x', 
+        withLabel: true, 
+        label: { position: 'rt', offset: [-15, 12], fontSize: 14, cssStyle: 'font-weight: bold; font-style: italic;', display: 'internal' },
+        ticks: { majorHeight: 10 } // Số 10 giúp tạo vạch chia nhỏ thay vì lưới vô tận (-1)
+    });
+    
+    let yAxis = board.create('axis', [[0, 0], [0, 1]], { 
+        name: 'y', 
+        withLabel: true, 
+        label: { position: 'rt', offset: [10, -10], fontSize: 14, cssStyle: 'font-weight: bold; font-style: italic;', display: 'internal' },
+        ticks: { majorHeight: 10 } 
+    });
+    board.create('text', [-0.45, -0.5, 'O'], { fontSize: 14, cssStyle: 'font-weight: bold; font-style: italic;', fixed: true, highlight: false, display: 'internal' });
+// THÊM DÒNG NÀY ĐỂ TẠO LƯỚI TỌA ĐỘ BẰNG JSXGRAPH
+    let gridCurve = board.create('grid', [], { visible: false });       
+ let graphCurve = null;
+    let extremaElements = [], inflectionElements = [], asymptoteElements = [], oxElements = [], oyElements = [];
+    let tangentGlider = null, tangentLine = null;
+    let extremaXValues = []; // Lưu trữ hoành độ các điểm cực trị để tạo điểm hút (magnetic snap)
+
+    const DEFAULTS = {
+        cubic:   { a: '1/3', b: '0', c: '-1', d: '1' },
+        quartic: { a: '0.25', b: '-1.5', c: '1', d: '0' },
+        frac11:  { a: '2', b: '1', c: '1', d: '-1' },
+        frac21:  { a: '1', b: '-1', c: '-2', d: '1', e: '-1' }
+    };
+
+    function onTypeChange() {
+        let type = document.getElementById('func-type').value;
+        document.getElementById('box-d').style.display = (type === 'quartic') ? 'none' : 'flex';
+        document.getElementById('box-e').style.display = (type === 'frac21') ? 'flex' : 'none';
+        document.getElementById('lbl-chk-inflection').style.display = (type === 'cubic' || type === 'quartic') ? 'flex' : 'none';
+        document.getElementById('lbl-chk-asymptote').style.display = (type === 'frac11' || type === 'frac21') ? 'flex' : 'none';
+
+        renderPresets(type);
+        let defs = DEFAULTS[type];
+        ['a', 'b', 'c', 'd', 'e'].forEach(p => {
+            if (defs[p] !== undefined) {
+                document.getElementById(`coef-${p}`).value = defs[p];
+                syncSliderFromText(p);
+            }
+        });
+        updateAll();
+    }
+
+    function parseInput(inputStr) {
+        if (!inputStr) return { val: 0, latex: "0" };
+        let str = inputStr.toString().trim().replace(',', '.');
+        if (str.includes('/')) {
+            let parts = str.split('/');
+            if (parts.length === 2) {
+                let num = parseFloat(parts[0]), den = parseFloat(parts[1]);
+                if (!isNaN(num) && !isNaN(den) && den !== 0) {
+                    let sign = (num * den < 0) ? "-" : "";
+                    let latex = `${sign}\\frac{${Math.abs(num)}}{${Math.abs(den)}}`;
+                    return { val: num / den, latex: latex };
+                }
+            }
+        }
+        let val = parseFloat(str);
+        if (isNaN(val)) return { val: 0, latex: "0" };
+        return { val: val, latex: val.toString() };
+    }
+
+    function syncTextFromSlider(param) {
+        let val = parseFloat(document.getElementById(`slider-${param}`).value);
+        document.getElementById(`coef-${param}`).value = val;
+        updateAll();
+    }
+
+    function syncSliderFromText(param) {
+        let parsed = parseInput(document.getElementById(`coef-${param}`).value);
+        let slider = document.getElementById(`slider-${param}`);
+        if (!isNaN(parsed.val)) {
+            slider.value = Math.min(Math.max(parsed.val, parseFloat(slider.min)), parseFloat(slider.max));
+        }
+    }
+
+    function gcd(a, b) { a = Math.abs(a); b = Math.abs(b);
+        while (b) { let t = b; b = a % b; a = t; } return a;
+    }
+    function makeFrac(n, d) {
+        if (d === 0) return { n: 0, d: 1 };
+        let g = gcd(Math.round(n), Math.round(d));
+        n = Math.round(n) / g; d = Math.round(d) / g;
+        if (d < 0) { n = -n; d = -d; }
+        return { n, d };
+    }
+    function addFrac(f1, f2) { return makeFrac(f1.n * f2.d + f2.n * f1.d, f1.d * f2.d); }
+    function mulFrac(f1, f2) { return makeFrac(f1.n * f2.n, f1.d * f2.d); }
+    function simplifyRadical(n) {
+        n = Math.abs(Math.round(n));
+        let out = 1, inside = n;
+        for (let i = 2; i * i <= inside; i++) {
+            while (inside % (i * i) === 0) { out *= i; inside /= (i * i); }
+        }
+        return [out, inside];
+    }
+    function fracToLatex(f) {
+        if (f.d === 1) return f.n.toString();
+        let sign = f.n < 0 ? "-" : "";
+        return `${sign}\\frac{${Math.abs(f.n)}}{${f.d}}`;
+    }
+    function floatToFrac(val) {
+        let sign = val < 0 ? -1 : 1; val = Math.abs(val);
+        for(let d=1; d<=100; d++) {
+            let n = Math.round(val * d);
+            if (Math.abs(val - n/d) < 1e-6) return makeFrac(sign * n, d);
+        }
+        return makeFrac(Math.round(val * 10000) * sign, 10000);
+    }
+    function formatIrrational(q, c, S) {
+        if (c.n === 0 || S === 0) return fracToLatex(q);
+        let lcm = Math.abs(q.d * c.d) / gcd(q.d, c.d);
+        let n1 = q.n * (lcm / q.d);
+        let n2 = c.n * (lcm / c.d);
+        let absN2 = Math.abs(n2);
+        let s2_abs = absN2 === 1 ? "" : absN2.toString();
+        let numStr = "";
+        if (n1 === 0) { numStr = (n2 < 0 ? "-" : "") + `${s2_abs}\\sqrt{${S}}`; } 
+        else { let sign2 = n2 > 0 ? "+" : "-"; numStr = `${n1} ${sign2} ${s2_abs}\\sqrt{${S}}`; }
+        if (lcm === 1) return numStr;
+        return `\\frac{${numStr}}{${lcm}}`;
+    }
+    function exactRoots(A, B, C) {
+        A = Math.round(A * 10000);
+        B = Math.round(B * 10000); C = Math.round(C * 10000);
+        let d = B*B - 4*A*C;
+        if (d < 0) return [];
+        if (d === 0) {
+            let f = makeFrac(-B, 2*A);
+            return [{ val: -B/(2*A), latex: fracToLatex(f), exact: {q: f, c: makeFrac(0,1), s: 0} }];
+        }
+        let sqrt_d = Math.sqrt(d);
+        if (Number.isInteger(sqrt_d)) {
+            let f1 = makeFrac(-B - sqrt_d, 2*A);
+            let f2 = makeFrac(-B + sqrt_d, 2*A);
+            let roots = [
+                { val: (-B - sqrt_d)/(2*A), latex: fracToLatex(f1), exact: {q: f1, c: makeFrac(0,1), s: 0} },
+                { val: (-B + sqrt_d)/(2*A), latex: fracToLatex(f2), exact: {q: f2, c: makeFrac(0,1), s: 0} }
+            ];
+            return roots.sort((a,b) => a.val - b.val);
+        }
+        let sim = simplifyRadical(d);
+        let out = sim[0], inside = sim[1];
+        let q = makeFrac(-B, 2*A);
+        let c = makeFrac(out, 2*A);
+        let latex1 = formatIrrational(q, makeFrac(-c.n, c.d), inside);
+        let latex2 = formatIrrational(q, c, inside);
+        let roots = [
+            { val: (-B - Math.sqrt(d))/(2*A), latex: latex1, exact: {q: q, c: makeFrac(-c.n, c.d), s: inside} },
+            { val: (-B + Math.sqrt(d))/(2*A), latex: latex2, exact: {q: q, c: c, s: inside} }
+        ];
+        return roots.sort((a,b) => a.val - b.val);
+    }
+    function evalLinearExact(m, n_const, exactX) {
+        let fm = floatToFrac(m);
+        let fn = floatToFrac(n_const);
+        let newQ = addFrac(mulFrac(fm, exactX.q), fn);
+        let newC = mulFrac(fm, exactX.c);
+        return formatIrrational(newQ, newC, exactX.s);
+    }
+
+    function clearElements(arr) { arr.forEach(el => board.removeObject(el)); return []; }
+    function addPointWithLines(x, y, color, arr) {
+        let p = board.create('point', [x, y], { withLabel: false, size: 2.5, color: color, showInfobox: true });
+        let lv = board.create('segment', [[x, y], [x, 0]], { dash: 2, strokeColor: color, strokeWidth: 1 });
+        let lh = board.create('segment', [[0, y], [x, y]], { dash: 2, strokeColor: color, strokeWidth: 1 });
+        arr.push(p, lv, lh);
+    }
+    function addPoint(x, y, color, arr) {
+        let p = board.create('point', [x, y], { withLabel: false, size: 2.5, color: color, showInfobox: true });
+        arr.push(p);
+    }
+
+   function toggleVisibility() {
+        let showExtrema = document.getElementById('chk-extrema').checked;
+        let showInflection = document.getElementById('chk-inflection').checked;
+        let showAsymptotes = document.getElementById('chk-asymptote').checked;
+        let showOx = document.getElementById('chk-ox').checked;
+        let showOy = document.getElementById('chk-oy').checked;
+        let showTangent = document.getElementById('chk-tangent').checked;
+        
+        // Kiểm tra checkbox lưới có đang được tích hay không
+        let showGrid = document.getElementById('chk-grid').checked;
+        
+        // Bật/tắt lưới bằng cách thay đổi độ dài vạch chia (ticks) giữa -1 và 10
+        if (typeof xAxis !== 'undefined') xAxis.defaultTicks.setAttribute({ majorHeight: showGrid ? -1 : 10 });
+        if (typeof yAxis !== 'undefined') yAxis.defaultTicks.setAttribute({ majorHeight: showGrid ? -1 : 10 });
+        
+        extremaElements.forEach(el => el.setAttribute({ visible: showExtrema }));
+        inflectionElements.forEach(el => el.setAttribute({ visible: showInflection }));
+        asymptoteElements.forEach(el => el.setAttribute({ visible: showAsymptotes }));
+        oxElements.forEach(el => el.setAttribute({ visible: showOx }));
+        oyElements.forEach(el => el.setAttribute({ visible: showOy }));
+// THÊM DÒNG NÀY ĐỂ ẨN/HIỆN LƯỚI TỌA ĐỘ
+        if (typeof gridCurve !== 'undefined') gridCurve.setAttribute({ visible: showGrid });
+        if (tangentGlider) tangentGlider.setAttribute({ visible: showTangent });
+        if (tangentLine) tangentLine.setAttribute({ visible: showTangent });
+        if (isExamMode) {
+            if (typeof graphCurve !== 'undefined' && graphCurve) graphCurve.setAttribute({ strokeColor: '#000000', strokeWidth: 2.2 });
+            asymptoteElements.forEach(el => el.setAttribute({ strokeColor: '#000000', strokeWidth: 1.2, dash: 2 }));
+            extremaElements.forEach(el => {
+                if (el.elType === 'point') el.setAttribute({ color: '#000000', size: 2.2 });
+                else el.setAttribute({ strokeColor: '#000000', strokeWidth: 1, dash: 1 });
+            });
+        }
+        board.update();
+        updateTangentText();
+    }
+
+    
+    function getOptimalBoundingBox() {
+        let type = document.getElementById('func-type').value;
+        let pA = parseInput(document.getElementById('coef-a').value);
+        let pB = parseInput(document.getElementById('coef-b').value);
+        let pC = parseInput(document.getElementById('coef-c').value);
+        let pD = parseInput(document.getElementById('coef-d').value);
+        let pE = parseInput(document.getElementById('coef-e').value);
+
+        let a = pA.val, b = pB.val, c = pC.val, d = pD.val, e = pE.val;
+        let xCenter = 0, yCenter = 0, radius = 6.5;
+
+        if (type === 'cubic' && Math.abs(a) > 1e-6) {
+            let x_u = -b / (3 * a);
+            let y_u = a * Math.pow(x_u, 3) + b * Math.pow(x_u, 2) + c * x_u + d;
+            let delta_p = b * b - 3 * a * c;
+            if (delta_p > 0) {
+                let dx = Math.sqrt(delta_p) / (3 * Math.abs(a));
+                let x1 = x_u - dx, x2 = x_u + dx;
+                let y1 = a * Math.pow(x1, 3) + b * Math.pow(x1, 2) + c * x1 + d;
+                let y2 = a * Math.pow(x2, 3) + b * Math.pow(x2, 2) + c * x2 + d;
+
+                let allX = [x1, x2, x_u, 0];
+                let allY = [y1, y2, y_u, 0];
+                let minX = Math.min(...allX), maxX = Math.max(...allX);
+                let minY = Math.min(...allY), maxY = Math.max(...allY);
+
+                xCenter = (minX + maxX) / 2;
+                yCenter = (minY + maxY) / 2;
+                let spanX = maxX - minX;
+                let spanY = maxY - minY;
+                radius = Math.max(spanX, spanY) * 0.72 + 1.8;
+            } else {
+                xCenter = x_u * 0.5;
+                yCenter = y_u * 0.5;
+                radius = Math.max(Math.abs(x_u), Math.abs(y_u), 4) + 2.5;
+            }
+        } else if (type === 'quartic' && Math.abs(a) > 1e-6) {
+            xCenter = 0;
+            let y0 = c;
+            if (a * b < 0) {
+                let x_ct = Math.sqrt(-b / (2 * a));
+                let y_ct = a * Math.pow(x_ct, 4) + b * Math.pow(x_ct, 2) + c;
+                yCenter = (y0 + y_ct) / 2;
+                let spanY = Math.abs(y0 - y_ct);
+                radius = Math.max(x_ct * 2, spanY, 4) * 0.8 + 1.8;
+            } else {
+                yCenter = y0;
+                radius = Math.max(Math.abs(y0), 4) + 2.5;
+            }
+        } else if (type === 'frac11' && Math.abs(c) > 1e-6) {
+            let x_i = -d / c;
+            let y_i = a / c;
+            xCenter = x_i;
+            yCenter = y_i;
+            radius = Math.max(Math.abs(x_i) + 4, Math.abs(y_i) + 4, 6);
+        } else if (type === 'frac21' && Math.abs(d) > 1e-6) {
+            let x_i = -e / d;
+            let y_i = (a / d) * x_i + (b * d - a * e) / (d * d);
+            xCenter = x_i;
+            yCenter = y_i;
+            radius = Math.max(Math.abs(x_i) + 4, Math.abs(y_i) + 4, 6);
+        }
+
+        radius = Math.min(Math.max(radius, 4.5), 14);
+        return [xCenter - radius, yCenter + radius, xCenter + radius, yCenter - radius];
+    }
+
+    function autoCenterGraph() {
+        let bbox = getOptimalBoundingBox();
+        board.setBoundingBox(bbox, true);
+    }
+
+    function centerOrigin() {
+        board.setBoundingBox([-8, 8, 8, -8], true);
+    }
+
+    function resetView() {
+        autoCenterGraph();
+    }
+
+    function panBoard(dx, dy) {
+        let bbox = board.getBoundingBox();
+        let w = bbox[2] - bbox[0];
+        let h = bbox[1] - bbox[3];
+        let stepX = (w * 0.15) * dx;
+        let stepY = (h * 0.15) * dy;
+        board.setBoundingBox([bbox[0] + stepX, bbox[1] + stepY, bbox[2] + stepX, bbox[3] + stepY], true);
+    }
+
+    function zoomIn() { board.zoomIn(); }
+    function zoomOut() { board.zoomOut(); }
+    function resetView() { board.setBoundingBox(DEFAULT_BOUNDING_BOX, false); }
+
+    function updateTangentText() {
+        let info = document.getElementById('tangent-info');
+        if (tangentLine && document.getElementById('chk-tangent').checked) {
+            let m = tangentLine.getSlope();
+            let isDark = document.body.classList.contains('dark-mode');
+            let color = m > 0 ? (isDark ? "#60a5fa" : "blue") : (m < 0 ? (isDark ? "#f87171" : "red") : (isDark ? "#f8fafc" : "black"));
+            info.innerHTML = `Hệ số góc tiếp tuyến tại x = ${tangentGlider.X().toFixed(2)}: <span style="color:${color};">k = ${m.toFixed(4)}</span>`;
+            tangentLine.setAttribute({strokeColor: m > 0 ? "blue" : (m < 0 ? "red" : "black")});
+        } else {
+            info.innerHTML = "";
+        }
+    }
+
+    function formatTerm(latex, power, isFirst) {
+        if (latex === "0") return "";
+        let isNegative = latex.startsWith("-");
+        let absLatex = isNegative ? latex.substring(1) : latex;
+        let term = "";
+        if (isFirst) {
+            term += isNegative ? "-" : "";
+        } else {
+            term += isNegative ? " - " : " + ";
+        }
+        if (absLatex !== "1" || power === "") term += absLatex;
+        term += power;
+        return term;
+    }
+
+    function solveCubic(a, b, c, d) {
+        if (Math.abs(a) < 1e-8) return [];
+        let p = (3 * a * c - b * b) / (3 * a * a);
+        let q = (2 * b * b * b - 9 * a * b * c + 27 * a * a * d) / (27 * a * a * a);
+        let roots = [];
+        let discriminant = (q * q / 4) + (p * p * p / 27);
+        if (Math.abs(discriminant) < 1e-8) {
+            if (Math.abs(p) < 1e-8 && Math.abs(q) < 1e-8) { roots.push(-b / (3 * a)); } 
+            else { roots.push(2 * Math.cbrt(-q / 2) - b / (3 * a)); roots.push(-Math.cbrt(-q / 2) - b / (3 * a)); }
+        } else if (discriminant > 0) {
+            let u = Math.cbrt(-q / 2 + Math.sqrt(discriminant)), v = Math.cbrt(-q / 2 - Math.sqrt(discriminant));
+            roots.push(u + v - b / (3 * a));
+        } else {
+            let r = Math.sqrt(-p * p * p / 27), phi = Math.acos(-q / (2 * r));
+            roots.push(2 * Math.cbrt(r) * Math.cos(phi / 3) - b / (3 * a));
+            roots.push(2 * Math.cbrt(r) * Math.cos((phi + 2 * Math.PI) / 3) - b / (3 * a));
+            roots.push(2 * Math.cbrt(r) * Math.cos((phi + 4 * Math.PI) / 3) - b / (3 * a));
+        }
+        return roots.filter((r, i, arr) => i === 0 || Math.abs(r - arr[i - 1]) > 1e-4);
+    }
+
+    function updateAll() {
+        let type = document.getElementById('func-type').value;
+        let absType = document.getElementById('abs-type').value;
+        
+        let pA = parseInput(document.getElementById('coef-a').value);
+        let pB = parseInput(document.getElementById('coef-b').value);
+        let pC = parseInput(document.getElementById('coef-c').value);
+        let pD = parseInput(document.getElementById('coef-d').value);
+        let pE = parseInput(document.getElementById('coef-e').value);
+
+        let a = pA.val, b = pB.val, c = pC.val, d = pD.val, e = pE.val;
+        let f_base, finalFormula = "";
+        
+        extremaElements = clearElements(extremaElements);
+        inflectionElements = clearElements(inflectionElements);
+        asymptoteElements = clearElements(asymptoteElements);
+        oxElements = clearElements(oxElements);
+        oyElements = clearElements(oyElements);
+        extremaXValues = []; // Reset danh sách hoành độ cực trị
+
+        if (type === 'cubic') {
+            f_base = x => a*x*x*x + b*x*x + c*x + d;
+            let t1 = formatTerm(pA.latex, "x^3", true);
+            let t2 = formatTerm(pB.latex, "x^2", t1 === "");
+            let t3 = formatTerm(pC.latex, "x", t1 === "" && t2 === "");
+            let t4 = formatTerm(pD.latex, "", t1 === "" && t2 === "" && t3 === "");
+            finalFormula = `y = ${t1}${t2}${t3}${t4}`;
+            
+            let deltaExt = b*b - 3*a*c;
+            if(deltaExt > 0) {
+                let x1 = (-b - Math.sqrt(deltaExt))/(3*a), x2 = (-b + Math.sqrt(deltaExt))/(3*a);
+                addPointWithLines(x1, f_base(x1), '#ef4444', extremaElements);
+                addPointWithLines(x2, f_base(x2), '#ef4444', extremaElements);
+                extremaXValues = [x1, x2];
+            }
+            let xU = -b/(3*a);
+            addPointWithLines(xU, f_base(xU), '#f59e0b', inflectionElements);
+            solveCubic(a, b, c, d).forEach(r => addPoint(r, 0, '#10b981', oxElements));
+        } else if (type === 'quartic') {
+            f_base = x => a*x*x*x*x + b*x*x + c;
+            let t1 = formatTerm(pA.latex, "x^4", true);
+            let t2 = formatTerm(pB.latex, "x^2", t1 === "");
+            let t3 = formatTerm(pC.latex, "", t1 === "" && t2 === "");
+            finalFormula = `y = ${t1}${t2}${t3}`;
+            
+            extremaXValues = [0];
+            addPointWithLines(0, c, '#ef4444', extremaElements);
+            if (-b/(2*a) > 0) {
+                let xE = Math.sqrt(-b/(2*a));
+                addPointWithLines(xE, f_base(xE), '#ef4444', extremaElements);
+                addPointWithLines(-xE, f_base(-xE), '#ef4444', extremaElements);
+                extremaXValues = [-xE, 0, xE];
+            }
+            if (-b/(6*a) > 0) {
+                let xU = Math.sqrt(-b/(6*a));
+                addPointWithLines(xU, f_base(xU), '#f59e0b', inflectionElements);
+                addPointWithLines(-xU, f_base(-xU), '#f59e0b', inflectionElements);
+            }
+            let deltaRoot = b*b - 4*a*c;
+            if(deltaRoot >= 0) {
+                let r1 = (-b - Math.sqrt(deltaRoot))/(2*a);
+                let r2 = (-b + Math.sqrt(deltaRoot))/(2*a);
+                if(r1 >= 0) { addPoint(Math.sqrt(r1), 0, '#10b981', oxElements); addPoint(-Math.sqrt(r1), 0, '#10b981', oxElements); }
+                if(r2 >= 0 && r2 !== r1) { addPoint(Math.sqrt(r2), 0, '#10b981', oxElements); addPoint(-Math.sqrt(r2), 0, '#10b981', oxElements); }
+            }
+
+        } else if (type === 'frac11') {
+            f_base = x => (Math.abs(c*x + d) < 1e-5) ? NaN : (a*x + b)/(c*x + d);
+            finalFormula = `y = \\frac{${formatTerm(pA.latex, "x", true)}${formatTerm(pB.latex, "", pA.latex==="0")}}{${formatTerm(pC.latex, "x", true)}${formatTerm(pD.latex, "", pC.latex==="0")}}`;
+            if (a !== 0) addPoint(-b/a, 0, '#10b981', oxElements);
+            asymptoteElements.push(board.create('line', [[-d/c, 0], [-d/c, 1]], { strokeColor: '#8b5cf6', dash: 2 }));
+            asymptoteElements.push(board.create('line', [[0, a/c], [1, a/c]], { strokeColor: '#8b5cf6', dash: 2 }));
+        } else if (type === 'frac21') {
+            f_base = x => (Math.abs(d*x + e) < 1e-5) ? NaN : (a*x*x + b*x + c)/(d*x + e);
+            let tu = `${formatTerm(pA.latex, "x^2", true)}${formatTerm(pB.latex, "x", pA.latex==="0")}${formatTerm(pC.latex, "", pA.latex==="0" && pB.latex==="0")}`;
+            let mau = `${formatTerm(pD.latex, "x", true)}${formatTerm(pE.latex, "", pD.latex==="0")}`;
+            finalFormula = `y = \\frac{${tu}}{${mau}}`;
+            
+            let deltaRoot = b*b - 4*a*c;
+            if(deltaRoot >= 0 && a !== 0) {
+                addPoint((-b - Math.sqrt(deltaRoot))/(2*a), 0, '#10b981', oxElements);
+                if (deltaRoot > 0) addPoint((-b + Math.sqrt(deltaRoot))/(2*a), 0, '#10b981', oxElements);
+            }
+            let A_der = a*d, B_der = 2*a*e, C_der = b*e - c*d;
+            let deltaDer = B_der*B_der - 4*A_der*C_der;
+            if(deltaDer > 0 && A_der !== 0) {
+                let x1 = (-B_der - Math.sqrt(deltaDer))/(2*A_der), x2 = (-B_der + Math.sqrt(deltaDer))/(2*A_der);
+                addPointWithLines(x1, f_base(x1), '#ef4444', extremaElements);
+                addPointWithLines(x2, f_base(x2), '#ef4444', extremaElements);
+                extremaXValues = [x1, x2];
+            }
+            asymptoteElements.push(board.create('line', [[-e/d, 0], [-e/d, 1]], { strokeColor: '#8b5cf6', dash: 2 }));
+            asymptoteElements.push(board.create('line', [[0, (b*d-a*e)/(d*d)], [1, a/d + (b*d-a*e)/(d*d)]], { strokeColor: '#8b5cf6', dash: 2 }));
+        }
+
+        if(!isNaN(f_base(0)) && Math.abs(f_base(0)) !== Infinity) {
+            addPoint(0, f_base(0), '#3b82f6', oyElements);
+        }
+
+        let f_val = f_base;
+        if (absType === 'abs_f') {
+            f_val = x => Math.abs(f_base(x));
+            finalFormula = `y = |${finalFormula.substring(4)}|`;
+        } else if (absType === 'abs_x') {
+            f_val = x => f_base(Math.abs(x));
+        } else if (absType === 'abs_both') {
+            f_val = x => Math.abs(f_base(Math.abs(x)));
+        }
+
+        if (graphCurve) board.removeObject(graphCurve);
+        if (tangentGlider) board.removeObject(tangentGlider);
+        if (tangentLine) board.removeObject(tangentLine);
+
+        currentFVal = f_val;
+        graphCurve = board.create('functiongraph', [f_val], { strokeWidth: 2, strokeColor: '#2563eb' });
+        
+        let showTangent = document.getElementById('chk-tangent').checked;
+        tangentGlider = board.create('glider', [1, f_val(1), graphCurve], { name: '', size: 3, color: '#d946ef', visible: showTangent });
+        tangentLine = board.create('tangent', [tangentGlider], { dash: 1, visible: showTangent });
+        
+        // Thêm tính năng điểm hút (magnetic snap) khi kéo điểm M đi qua các điểm cực trị
+        tangentGlider.on('drag', function() {
+            if (extremaXValues.length > 0) {
+                let currentX = tangentGlider.X();
+                let snapThreshold = 0.35; // Khoảng cách nhận điểm hút
+                for (let xExt of extremaXValues) {
+                    if (Math.abs(currentX - xExt) < snapThreshold) {
+                        tangentGlider.setPosition(JXG.COORDS_BY_USER, [xExt, f_val(xExt)]);
+                        break;
+                    }
+                }
+            }
+            updateTangentText();
+        });
+
+        board.on('update', updateTangentText);
+        updateTangentText();
+
+        document.getElementById('math-formula').innerHTML = `\\[${finalFormula}\\]`;
+        document.getElementById('bbt-output').innerHTML = renderBBT(type, a, b, c, d, e, f_base);
+        toggleVisibility();
+        
+        updateTuongGiao();
+        if (window.MathJax) MathJax.typesetPromise();
+    }
+
+    function renderBBT(type, a, b, c, d, e, f) {
+        let h_x = 36, h_yp = 36, h_y = 120;
+        let y_st = h_x + h_yp;
+        
+        let html = `
+        <div style="display: flex; border: 1px solid var(--bbt-border); background: var(--bbt-bg); color: var(--text); font-size: 0.95rem; position: relative; font-family: 'Times New Roman', serif;">
+            <div style="width: 55px; border-right: 1px solid var(--bbt-border); display: flex; flex-direction: column; text-align: center; font-style: italic; z-index: 2; background: var(--bbt-bg);">
+                <div style="height: ${h_x}px; line-height: ${h_x}px; border-bottom: 1px solid var(--bbt-border);">x</div>
+                <div style="height: ${h_yp}px; line-height: ${h_yp}px; border-bottom: 1px solid var(--bbt-border);">y'</div>
+                <div style="height: ${h_y}px; display: flex; align-items: center; justify-content: center;">y</div>
+            </div>
+            <div style="flex: 1; position: relative; overflow: hidden; min-height: ${h_x + h_yp + h_y}px;">
+                <div style="position: absolute; top: ${h_x}px; left: 0; right: 0; border-bottom: 1px solid var(--bbt-border); z-index: 1;"></div>
+                <div style="position: absolute; top: ${h_x + h_yp}px; left: 0; right: 0; border-bottom: 1px solid var(--bbt-border); z-index: 1;"></div>
+        `;
+        
+        let svg = `<svg width="100%" height="${h_y}px" style="position: absolute; top: ${y_st}px; left: 0; z-index: 2; pointer-events: none;">
+            <defs><marker id="arr-head" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto-start-reverse"><path d="M 0 1 L 10 5 L 0 9 z" fill="var(--text)"/></marker></defs>`;
+            
+        function txt(t, x, y) { html += `<div style="position: absolute; left: ${x}%; top: ${y}px; transform: translate(-50%, -50%); white-space: nowrap; z-index: 3;">${t}</div>`; }
+        function arr(x1, y1, x2, y2) { svg += `<line x1="${x1}%" y1="${y1}%" x2="${x2}%" y2="${y2}%" stroke="var(--text)" stroke-width="1.2" marker-end="url(#arr-head)" />`; }
+        function dLine(x, top, h) { html += `<div style="position: absolute; left: ${x}%; top: ${top}px; height: ${h}px; width: 4px; border-left: 1px solid var(--bbt-border); border-right: 1px solid var(--bbt-border); transform: translateX(-50%); z-index: 1; background: var(--bbt-bg);"></div>`; }
+
+        let ty_top = y_st + h_y * 0.18, ty_bot = y_st + h_y * 0.82; 
+        let ay_top = 28, ay_bot = 72;
+
+        if (type === 'cubic') {
+            let roots = exactRoots(3*a, 2*b, c);
+            if (roots.length === 2) {
+                let px = [10, 36, 64, 90], ps = [23, 50, 77];
+                txt("$-\\infty$", px[0], h_x / 2); txt(`$${roots[0].latex}$`, px[1], h_x / 2); txt(`$${roots[1].latex}$`, px[2], h_x / 2); txt("$+\\infty$", px[3], h_x / 2);
+                
+                let s1 = a > 0 ? "+" : "-", s2 = a > 0 ? "-" : "+";
+                txt(`$${s1}$`, ps[0], h_x + h_yp / 2); txt("$0$", px[1], h_x + h_yp / 2); txt(`$${s2}$`, ps[1], h_x + h_yp / 2); txt("$0$", px[2], h_x + h_yp / 2); txt(`$${s1}$`, ps[2], h_x + h_yp / 2);
+                
+                let m = (2*c)/3 - (2*b*b)/(9*a), n_const = d - (b*c)/(9*a);
+                let y1_latex = evalLinearExact(m, n_const, roots[0].exact);
+                let y2_latex = evalLinearExact(m, n_const, roots[1].exact);
+                
+                if (a > 0) {
+                    txt("$-\\infty$", px[0], ty_bot);
+                    txt(`$${y1_latex}$`, px[1], ty_top); txt(`$${y2_latex}$`, px[2], ty_bot); txt("$+\\infty$", px[3], ty_top);
+                    arr(px[0]+4, ay_bot, px[1]-4, ay_top); arr(px[1]+4, ay_top, px[2]-4, ay_bot);
+                    arr(px[2]+4, ay_bot, px[3]-4, ay_top);
+                } else {
+                    txt("$+\\infty$", px[0], ty_top);
+                    txt(`$${y1_latex}$`, px[1], ty_bot); txt(`$${y2_latex}$`, px[2], ty_top); txt("$-\\infty$", px[3], ty_bot);
+                    arr(px[0]+4, ay_top, px[1]-4, ay_bot); arr(px[1]+4, ay_bot, px[2]-4, ay_top);
+                    arr(px[2]+4, ay_top, px[3]-4, ay_bot);
+                }
+            } else {
+                let px = [15, 85], ps = [50];
+                txt("$-\\infty$", px[0], h_x / 2); txt("$+\\infty$", px[1], h_x / 2);
+                txt(a > 0 ? "$+$" : "$-$", ps[0], h_x + h_yp / 2);
+                if (a > 0) {
+                    txt("$-\\infty$", px[0], ty_bot);
+                    txt("$+\\infty$", px[1], ty_top); arr(px[0]+6, ay_bot, px[1]-6, ay_top);
+                } else {
+                    txt("$+\\infty$", px[0], ty_top);
+                    txt("$-\\infty$", px[1], ty_bot); arr(px[0]+6, ay_top, px[1]-6, ay_bot);
+                }
+            }
+        } 
+        else if (type === 'quartic') {
+            if (-b/(2*a) > 0) {
+                let f_x2 = floatToFrac(-b/(2*a));
+                let sim = simplifyRadical(f_x2.n * f_x2.d);
+                let exactX2 = {q: makeFrac(0,1), c: makeFrac(sim[0], f_x2.d), s: sim[1]};
+                let exactX1 = {q: makeFrac(0,1), c: makeFrac(-exactX2.c.n, exactX2.c.d), s: sim[1]};
+                
+                let r1_latex = formatIrrational(exactX1.q, exactX1.c, exactX1.s);
+                let r2_latex = formatIrrational(exactX2.q, exactX2.c, exactX2.s);
+                let y_latex = fracToLatex(floatToFrac(c - (b*b)/(4*a)));
+                let c_latex = fracToLatex(floatToFrac(c));
+                let px = [8, 29, 50, 71, 92], ps = [18.5, 39.5, 60.5, 81.5];
+                txt("$-\\infty$", px[0], h_x/2); txt(`$${r1_latex}$`, px[1], h_x/2);
+                txt("$0$", px[2], h_x/2); txt(`$${r2_latex}$`, px[3], h_x/2); txt("$+\\infty$", px[4], h_x/2);
+                
+                let s1 = a > 0 ? "-" : "+", s2 = a > 0 ? "+" : "-";
+                txt(`$${s1}$`, ps[0], h_x + h_yp/2);
+                txt("$0$", px[1], h_x + h_yp/2); txt(`$${s2}$`, ps[1], h_x + h_yp/2); txt("$0$", px[2], h_x + h_yp/2); txt(`$${s1}$`, ps[2], h_x + h_yp/2);
+                txt("$0$", px[3], h_x + h_yp/2); txt(`$${s2}$`, ps[3], h_x + h_yp/2);
+
+                let v_inf = a > 0 ? "$+\\infty$" : "$-\\infty$";
+                if (a > 0) {
+                    txt(v_inf, px[0], ty_top);
+                    txt(`$${y_latex}$`, px[1], ty_bot); txt(`$${c_latex}$`, px[2], ty_top); txt(`$${y_latex}$`, px[3], ty_bot); txt(v_inf, px[4], ty_top);
+                    arr(px[0]+3, ay_top, px[1]-3, ay_bot); arr(px[1]+3, ay_bot, px[2]-3, ay_top);
+                    arr(px[2]+3, ay_top, px[3]-3, ay_bot); arr(px[3]+3, ay_bot, px[4]-3, ay_top);
+                } else {
+                    txt(v_inf, px[0], ty_bot);
+                    txt(`$${y_latex}$`, px[1], ty_top); txt(`$${c_latex}$`, px[2], ty_bot); txt(`$${y_latex}$`, px[3], ty_top); txt(v_inf, px[4], ty_bot);
+                    arr(px[0]+3, ay_bot, px[1]-3, ay_top); arr(px[1]+3, ay_top, px[2]-3, ay_bot);
+                    arr(px[2]+3, ay_bot, px[3]-3, ay_top); arr(px[3]+3, ay_top, px[4]-3, ay_bot);
+                }
+            } else {
+                let px = [15, 50, 85], ps = [32.5, 67.5];
+                txt("$-\\infty$", px[0], h_x/2); txt("$0$", px[1], h_x/2); txt("$+\\infty$", px[2], h_x/2);
+                let s1 = a > 0 ? "-" : "+", s2 = a > 0 ? "+" : "-";
+                txt(`$${s1}$`, ps[0], h_x + h_yp/2);
+                txt("$0$", px[1], h_x + h_yp/2); txt(`$${s2}$`, ps[1], h_x + h_yp/2);
+                let v_inf = a > 0 ? "$+\\infty$" : "$-\\infty$";
+                let c_latex = fracToLatex(floatToFrac(c));
+                if (a > 0) {
+                    txt(v_inf, px[0], ty_top);
+                    txt(`$${c_latex}$`, px[1], ty_bot); txt(v_inf, px[2], ty_top);
+                    arr(px[0]+5, ay_top, px[1]-5, ay_bot); arr(px[1]+5, ay_bot, px[2]-5, ay_top);
+                } else {
+                    txt(v_inf, px[0], ty_top);
+                    txt(`$${c_latex}$`, px[1], ty_top); txt(v_inf, px[2], ty_bot);
+                    arr(px[0]+5, ay_top, px[1]-5, ay_bot); arr(px[1]+5, ay_top, px[2]-5, ay_bot);
+                }
+            }
+        }
+        else if (type === 'frac11') {
+            let x0_latex = fracToLatex(floatToFrac(-d/c));
+            let yh_latex = fracToLatex(floatToFrac(a/c));
+            let det = a*d - b*c;
+            let px = [15, 50, 85], ps = [32.5, 67.5];
+            txt("$-\\infty$", px[0], h_x / 2); txt(`$${x0_latex}$`, px[1], h_x / 2); txt("$+\\infty$", px[2], h_x / 2);
+            let sign = det > 0 ? "+" : "-";
+            txt(`$${sign}$`, ps[0], h_x + h_yp / 2);
+            dLine(px[1], h_x, h_yp + h_y); txt(`$${sign}$`, ps[1], h_x + h_yp / 2);
+            if (det > 0) {
+                txt(`$${yh_latex}$`, px[0], ty_bot);
+                txt("$+\\infty$", px[1] - 4, ty_top); arr(px[0] + 6, ay_bot, px[1] - 7, ay_top);
+                txt("$-\\infty$", px[1] + 4, ty_bot);
+                txt(`$${yh_latex}$`, px[2], ty_top); arr(px[1] + 7, ay_bot, px[2] - 6, ay_top);
+            } else {
+                txt(`$${yh_latex}$`, px[0], ty_top);
+                txt("$-\\infty$", px[1] - 4, ty_bot); arr(px[0] + 6, ay_top, px[1] - 7, ay_bot);
+                txt("$+\\infty$", px[1] + 4, ty_top);
+                txt(`$${yh_latex}$`, px[2], ty_bot); arr(px[1] + 7, ay_top, px[2] - 6, ay_bot);
+            }
+        }
+        else if (type === 'frac21') {
+            let x0_latex = fracToLatex(floatToFrac(-e/d));
+            let roots = exactRoots(a*d, 2*a*e, b*e - c*d);
+            
+            if (roots.length === 2) {
+                let px = [8, 29, 50, 71, 92], ps = [18.5, 39.5, 60.5, 81.5];
+                txt("$-\\infty$", px[0], h_x/2); txt(`$${roots[0].latex}$`, px[1], h_x/2); txt(`$${x0_latex}$`, px[2], h_x/2); txt(`$${roots[1].latex}$`, px[3], h_x/2); txt("$+\\infty$", px[4], h_x/2);
+                let s1 = (a*d) > 0 ? "+" : "-", s2 = (a*d) > 0 ? "-" : "+";
+                txt(`$${s1}$`, ps[0], h_x + h_yp/2); txt("$0$", px[1], h_x + h_yp/2); txt(`$${s2}$`, ps[1], h_x + h_yp/2); dLine(px[2], h_x, h_yp + h_y);
+                txt(`$${s2}$`, ps[2], h_x + h_yp/2); txt("$0$", px[3], h_x + h_yp/2); txt(`$${s1}$`, ps[3], h_x + h_yp/2);
+                let y1_latex = evalLinearExact(2*a/d, b/d, roots[0].exact);
+                let y2_latex = evalLinearExact(2*a/d, b/d, roots[1].exact);
+                let vi_s = (a*d) > 0 ? "$-\\infty$" : "$+\\infty$", vi_e = (a*d) > 0 ? "$+\\infty$" : "$-\\infty$";
+                if (a*d > 0) {
+                    txt(vi_s, px[0], ty_bot);
+                    txt(`$${y1_latex}$`, px[1], ty_top); txt("$-\\infty$", px[2]-3, ty_bot);
+                    arr(px[0]+3, ay_bot, px[1]-3, ay_top); arr(px[1]+3, ay_top, px[2]-5, ay_bot);
+                    txt("$+\\infty$", px[2]+3, ty_top); txt(`$${y2_latex}$`, px[3], ty_bot);
+                    txt(vi_e, px[4], ty_top);
+                    arr(px[2]+5, ay_top, px[3]-3, ay_bot); arr(px[3]+3, ay_bot, px[4]-3, ay_top);
+                } else {
+                    txt(vi_s, px[0], ty_top);
+                    txt(`$${y1_latex}$`, px[1], ty_bot); txt("$+\\infty$", px[2]-3, ty_top);
+                    arr(px[0]+3, ay_top, px[1]-3, ay_bot); arr(px[1]+3, ay_bot, px[2]-5, ay_top);
+                    txt("$-\\infty$", px[2]+3, ty_bot); txt(`$${y2_latex}$`, px[3], ty_top);
+                    txt(vi_e, px[4], ty_bot);
+                    arr(px[2]+5, ay_bot, px[3]-3, ay_top); arr(px[3]+3, ay_top, px[4]-3, ay_bot);
+                }
+            } else {
+                let px = [15, 50, 85], ps = [32.5, 67.5];
+                txt("$-\\infty$", px[0], h_x/2); txt(`$${x0_latex}$`, px[1], h_x/2); txt("$+\\infty$", px[2], h_x/2);
+                let s1 = (a*d) > 0 ? "+" : "-";
+                txt(`$${s1}$`, ps[0], h_x + h_yp/2); dLine(px[1], h_x, h_yp + h_y); txt(`$${s1}$`, ps[1], h_x + h_yp/2);
+                let vi_s = (a*d) > 0 ? "$-\\infty$" : "$+\\infty$", vi_e = (a*d) > 0 ? "$+\\infty$" : "$-\\infty$";
+                if (a*d > 0) {
+                    txt(vi_s, px[0], ty_bot);
+                    txt("$+\\infty$", px[1]-4, ty_top); arr(px[0]+6, ay_bot, px[1]-7, ay_top);
+                    txt("$-\\infty$", px[1]+4, ty_bot); txt(vi_e, px[2], ty_top); arr(px[1]+7, ay_bot, px[2]-6, ay_top);
+                } else {
+                    txt(vi_s, px[0], ty_bot);
+                    txt("$-\\infty$", px[1]-4, ty_bot); arr(px[0]+6, ay_top, px[1]-7, ay_bot);
+                    txt("$+\\infty$", px[1]+4, ty_top); txt(vi_e, px[2], ty_top); arr(px[1]+7, ay_top, px[2]-6, ay_top);
+                }
+            }
+        }
+        
+        svg += `</svg>`;
+        html += svg + `</div></div>`;
+        return html;
+    }
+
+    function exportPNG() {
+        const area = document.getElementById('capture-area');
+        if (!area) return;
+        html2canvas(area, { scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = 'dothi_ham_so.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        });
+    }
+
+    window.onload = function() {
+        onTypeChange();
+    }
+</script>
+
+</body>
+</html>
