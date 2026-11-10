@@ -5,223 +5,519 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="QM2025 OMR">
-  <meta name="format-detection" content="telephone=no">
-  <meta name="theme-color" content="#0A84FF">
-  <title>QM2025 OMR - Chấm Thi Tự Động iOS PWA</title>
-
-  <!-- PWA & iOS Safari Config -->
-  <link rel="manifest" href="./manifest.json">
-  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./css/ios_style.css">
-
-  <!-- SheetJS for Excel import/export -->
+  <meta name="apple-mobile-web-app-title" content="QM2025 Pro">
+  <title>QM2025 iOS Scanner</title>
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
-  <!-- OpenCV.js 4.8.0 with onload event -->
-  <script async src="https://docs.opencv.org/4.8.0/opencv.js" onload="window.dispatchEvent(new Event('opencv-ready'));" type="text/javascript"></script>
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; margin: 0; padding: 0; }
+    body, html {
+      width: 100vw; height: 100vh; overflow: hidden; position: fixed;
+      background: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+    }
+    /* Thanh điều khiển phía trên chuẩn iOS */
+    .top-bar {
+      position: absolute; top: env(safe-area-inset-top, 12px); left: 0; right: 0; z-index: 20;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 12px; background: rgba(0,0,0,0.65); backdrop-filter: blur(10px);
+    }
+    .template-select, .made-select {
+      background: #2c2c2e; color: #fff; border: 1px solid #48484a; border-radius: 8px;
+      padding: 6px 10px; font-size: 13px; font-weight: 600;
+    }
+    .status-badge {
+      font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 12px;
+      background: rgba(255, 159, 10, 0.25); color: #ff9f0a; border: 1px solid #ff9f0a;
+    }
+    .status-badge.ready { background: rgba(48, 209, 88, 0.25); color: #30d158; border-color: #30d158; }
+
+    /* Vùng Camera Fullscreen */
+    .viewport { position: relative; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; }
+    video { position: absolute; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
+    canvas#overlay { position: absolute; width: 100%; height: 100%; object-fit: cover; z-index: 5; pointer-events: none; }
+
+    /* Cụm nút bấm phía dưới kiểu Camera iPhone */
+    .bottom-dock {
+      position: absolute; bottom: 0; left: 0; right: 0; z-index: 20;
+      padding: 12px 20px calc(env(safe-area-inset-bottom, 16px) + 10px);
+      background: linear-gradient(to top, rgba(0,0,0,0.9) 70%, transparent);
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .controls-row { display: flex; justify-content: space-around; align-items: center; }
+    
+    /* Nút Chụp Tròn To Chuẩn iOS */
+    .shutter-outer {
+      width: 74px; height: 74px; border-radius: 50%; border: 4px solid #fff;
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
+      box-shadow: 0 0 15px rgba(0,0,0,0.6);
+    }
+    .shutter-inner {
+      width: 60px; height: 60px; border-radius: 50%; background: #fff;
+      transition: transform 0.1s ease, background 0.1s ease;
+    }
+    .shutter-outer:active .shutter-inner { transform: scale(0.88); background: #ffd60a; }
+
+    .dock-btn {
+      background: rgba(44,44,46,0.85); color: #fff; border: 1px solid #48484a;
+      border-radius: 12px; padding: 10px 14px; font-size: 13px; font-weight: 600;
+      display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 78px;
+    }
+    .dock-btn.active { background: #0a84ff; border-color: #0a84ff; }
+
+    /* Modal Kết quả & Nhập Đáp án */
+    .modal {
+      position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,0.88);
+      backdrop-filter: blur(12px); display: none; flex-direction: column;
+      padding: calc(env(safe-area-inset-top, 16px) + 10px) 16px calc(env(safe-area-inset-bottom, 16px) + 10px);
+      overflow-y: auto;
+    }
+    .modal.open { display: flex; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .modal-title { font-size: 18px; font-weight: 700; color: #ffd60a; }
+    .close-btn { background: #3a3a3c; color: #fff; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; }
+    
+    .score-card {
+      background: #1c1c1e; border-radius: 14px; padding: 14px; margin-bottom: 12px;
+      border: 1px solid #38383a; display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;
+    }
+    .total-score {
+      grid-column: span 2; font-size: 28px; font-weight: 800; color: #ff453a;
+      text-align: center; padding: 6px 0; border-bottom: 1px solid #2c2c2e;
+    }
+    .sub-score { font-size: 14px; color: #ebebf5; }
+    .sub-score b { color: #30d158; }
+    .preview-img { width: 100%; border-radius: 10px; border: 1px solid #48484a; margin-bottom: 12px; }
+    input, textarea {
+      width: 100%; background: #2c2c2e; color: #fff; border: 1px solid #48484a;
+      border-radius: 8px; padding: 10px; font-size: 14px; margin-bottom: 10px;
+    }
+    .btn-primary {
+      background: #30d158; color: #000; font-weight: 700; border: none;
+      padding: 12px; border-radius: 10px; font-size: 15px; width: 100%; margin-top: 6px;
+    }
+  </style>
 </head>
 <body>
-  <div class="app-container">
-    <!-- iOS Navigation Bar -->
-    <header class="ios-header">
-      <div class="ios-header-content">
-        <div>
-          <h1 class="header-title">QM2025 OMR Grader</h1>
-          <p class="header-subtitle">Chuẩn GDPT 2018 • Công Văn 1239/BGDĐT-QLCL</p>
-        </div>
-        <div class="status-badge">
-          <span class="status-dot"></span>
-          <span>Sẵn sàng</span>
-        </div>
-      </div>
-    </header>
 
-    <!-- Main Content Area -->
-    <main class="app-main">
-      <!-- Section: Chuyển đổi mẫu phiếu (Segmented Control) -->
-      <section class="card">
-        <div class="card-header">
-          <span class="card-title">Mẫu Phiếu Thi</span>
-          <span class="badge" id="currentTemplateBadge">12-04-06</span>
-        </div>
-        <div class="segmented-control" id="templateSegmented">
-          <button class="segmented-item active" data-template="QM_12_04_06" type="button">
-            QM 12-04-06
-          </button>
-          <button class="segmented-item" data-template="QM_12_02_04" type="button">
-            QM 12-02-04 (Tự Luận)
-          </button>
-          <button class="segmented-item" data-template="BGD_40_08_06" type="button">
-            BGD 40-08-06
-          </button>
-        </div>
-        <p class="template-desc" id="templateDesc">
-          Mẫu QM 12-04-06: 12 câu TN (3.0đ) + 4 câu Đúng/Sai (4.0đ) + 6 câu Trả lời ngắn (3.0đ). Thang điểm 10.0.
-        </p>
-      </section>
-
-      <!-- Section: Quét / Khung ngắm Camera -->
-      <section class="card">
-        <div class="card-header">
-          <span class="card-title">Khung Quét Phiếu Chấm</span>
-          <button id="btnToggleDebug" class="btn-text" type="button">Hiện Lưới Tọa Độ (Debug)</button>
-        </div>
-
-        <div class="viewport-wrapper" id="scannerViewport">
-          <video id="cameraVideo" playsinline webkit-playsinline muted autoplay></video>
-          <canvas id="previewCanvas"></canvas>
-          <div class="reticle-box" id="reticleBox">
-            <div class="corner-bracket top-left"></div>
-            <div class="corner-bracket top-right"></div>
-            <div class="corner-bracket bottom-left"></div>
-            <div class="corner-bracket bottom-right"></div>
-            <div class="reticle-center-cross"></div>
-          </div>
-        </div>
-
-        <!-- Toolbar Hành Động -->
-        <div class="toolbar">
-          <button id="btnCameraScan" class="btn-primary" type="button">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-              <circle cx="12" cy="13" r="4"/>
-            </svg>
-            Bật Camera
-          </button>
-
-          <button id="btnUploadPhoto" class="btn-secondary" type="button">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-              <circle cx="8.5" cy="8.5" r="1.5"/>
-              <polyline points="21 15 16 10 5 21"/>
-            </svg>
-            Tải Ảnh Lên
-          </button>
-          <input type="file" id="fileUploadInput" accept="image/*" style="display: none;">
-        </div>
-      </section>
-
-      <!-- Section: Kết quả chấm bài thi -->
-      <section class="card" id="resultsCard">
-        <div class="card-header">
-          <span class="card-title">Kết Quả Chấm Bài</span>
-          <span class="score-pill" id="totalScorePill">
-            <span class="score-label">TỔNG ĐIỂM:</span>
-            <span class="score-value" id="totalScoreDisplay">0.00</span>
-          </span>
-        </div>
-
-        <!-- Thông tin SBD & Mã Đề -->
-        <div class="info-row">
-          <div class="info-item">
-            <span class="info-label">Số Báo Danh</span>
-            <span class="info-value" id="resSBD">---</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">Mã Đề</span>
-            <span class="info-value" id="resMade">101</span>
-          </div>
-        </div>
-
-        <!-- Bảng điểm chi tiết các phần -->
-        <div class="score-table-wrap">
-          <table class="score-table">
-            <thead>
-              <tr>
-                <th>Phân Khu</th>
-                <th>Quy Cách</th>
-                <th>Điểm Đạt</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><strong>Phần I</strong> (Trắc nghiệm)</td>
-                <td id="p1Count">12 câu (3.0đ)</td>
-                <td class="score-cell highlight" id="resP1">0.00 / 3.0</td>
-              </tr>
-              <tr>
-                <td><strong>Phần II</strong> (Đúng / Sai)</td>
-                <td id="p2Count">4 câu (4.0đ)</td>
-                <td class="score-cell highlight" id="resP2">0.00 / 4.0</td>
-              </tr>
-              <tr>
-                <td><strong>Phần III</strong> (Trả lời ngắn)</td>
-                <td id="p3Count">6 câu (3.0đ)</td>
-                <td class="score-cell highlight" id="resP3">0.00 / 3.0</td>
-              </tr>
-              <tr id="p4ScoreRow" style="display: none;">
-                <td><strong>Phần IV</strong> (Tự luận)</td>
-                <td>Giáo viên chấm</td>
-                <td class="score-cell highlight" id="resP4">0.00 / 3.0</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Section: Ô nhập điểm Phần IV (Tự Luận - Chỉ hiển thị khi chọn mẫu QM_12_02_04) -->
-        <div class="essay-score-container" id="essayScoreSection">
-          <div class="essay-header">
-            <div class="essay-title">
-              <strong>Điểm Phần IV (Tự Luận)</strong>
-              <span class="badge" id="essayMaxSubBadge">Tối đa 3.0đ</span>
-            </div>
-            <span class="essay-sub">Gõ điểm hoặc chọn nhanh bằng các nút bên dưới</span>
-          </div>
-          
-          <div class="essay-input-group">
-            <button class="btn-stepper" id="btnDecEssay" type="button">- 0.25</button>
-            <input type="number" id="essayScoreInput" class="essay-input" value="0.00" min="0" max="10" step="0.25" placeholder="0.00">
-            <button class="btn-stepper" id="btnIncEssay" type="button">+ 0.25</button>
-          </div>
-
-          <!-- Bàn phím số nhanh cho Phần IV Tự Luận -->
-          <div class="quick-numpad-row" style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin-top: 10px;">
-            <button type="button" class="btn-numpad" data-val="0.5">0.5</button>
-            <button type="button" class="btn-numpad" data-val="1.0">1.0</button>
-            <button type="button" class="btn-numpad" data-val="1.5">1.5</button>
-            <button type="button" class="btn-numpad" data-val="2.0">2.0</button>
-            <button type="button" class="btn-numpad" data-val="2.5">2.5</button>
-            <button type="button" class="btn-numpad" data-val="3.0">3.0</button>
-          </div>
-        </div>
-      </section>
-
-      <!-- Section: Quản lý bài thi, Nạp đáp án Excel & Cân chỉnh lề in -->
-      <section class="card" style="margin-top: 16px;">
-        <div class="card-header">
-          <span class="card-title">Quản Lý Bài Thi & Dữ Liệu</span>
-        </div>
-
-        <div style="display: flex; gap: 8px; margin-bottom: 12px; align-items: center;">
-          <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Lớp:</label>
-          <select id="selectClassId" style="flex: 1; height: 38px; border-radius: var(--radius-sm); border: 1px solid var(--separator); background: var(--bg-card); color: var(--text-primary); padding: 0 10px; font-weight: 600;">
-            <option value="12B2">12B2 (Toán 12)</option>
-            <option value="12B5">12B5 (Toán 12)</option>
-            <option value="10B1">10B1 (Toán 10)</option>
-            <option value="10B2">10B2 (Toán 10)</option>
-          </select>
-          <button id="btnSaveRecord" class="btn-primary" style="padding: 8px 14px; font-size: 13px; background: #34C759;" type="button">💾 Lưu Bài</button>
-        </div>
-
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
-          <button id="btnOpenCalib" class="btn-secondary" style="font-size: 12px; padding: 10px 4px;" type="button">📐 Cân Chỉnh Lề</button>
-          <button id="btnImportKeyExcel" class="btn-secondary" style="font-size: 12px; padding: 10px 4px;" type="button">📥 Nạp Đ/A Excel</button>
-          <input type="file" id="fileKeyExcelInput" accept=".xlsx,.xls,.csv" style="display: none;">
-          <button id="btnExportExcel" class="btn-secondary" style="font-size: 12px; padding: 10px 4px; color: var(--ios-blue);" type="button">📊 Xuất Excel</button>
-        </div>
-      </section>
-    </main>
-
-    <!-- iOS Home Bar Indicator -->
-    <footer class="ios-footer">
-      <div class="home-indicator"></div>
-    </footer>
+  <!-- Thanh trạng thái trên cùng -->
+  <div class="top-bar">
+    <select id="tplSelect" class="template-select">
+      <option value="12_04_06">Mẫu 12-04-06 (CV 1239)</option>
+      <option value="12_02_04">Mẫu 12-02-04 (Có Tự luận)</option>
+    </select>
+    <div id="scanStatus" class="status-badge">Đang tìm 4 góc...</div>
+    <button class="template-select" onclick="openKeyModal()">🔑 Đáp án</button>
   </div>
 
-  <!-- Modular Scripts (All relative paths for GitHub Pages) -->
-  <script src="./js/scanner_engine.js"></script>
-  <script src="./js/omr_grader.js"></script>
-  <script src="./js/ui_overlay_and_data.js"></script>
-  <script src="./js/app.js"></script>
+  <!-- Khung hình Camera & Khung ngắm Bắt điểm ảnh -->
+  <div class="viewport">
+    <video id="video" playsinline webkit-playsinline autoplay muted></video>
+    <canvas id="overlay"></canvas>
+  </div>
+
+  <!-- Cụm điều khiển kiểu App iOS (Có nút Chụp Chủ Động & Tự Động) -->
+  <div class="bottom-dock">
+    <div style="text-align:center; font-size:12px; color:#aeaeb2;">
+      Đưa 4 góc phiếu vào 4 ô vuông xanh — Hoặc bấm <b>Nút Tròn Trắng</b> để chụp chấm ngay
+    </div>
+    <div class="controls-row">
+      <button id="autoBtn" class="dock-btn active" onclick="toggleAutoScan()">
+        <span>🎯 Tự bắt góc</span>
+        <small id="autoTxt">ĐANG BẬT</small>
+      </button>
+
+      <!-- NÚT CHỤP CHẤM BÀI TRỰC TIẾP -->
+      <div class="shutter-outer" onclick="manualCaptureAndGrade()">
+        <div class="shutter-inner"></div>
+      </div>
+
+      <button class="dock-btn" onclick="openHistoryModal()">
+        <span>📊 Đã chấm (<span id="countBadge">0</span>)</span>
+        <small>Xuất Excel</small>
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal Hiển thị Kết quả Chấm & Nhập điểm Tự luận -->
+  <div id="resultModal" class="modal">
+    <div class="modal-header">
+      <div class="modal-title">KẾT QUẢ CHẤM PHIẾU</div>
+      <button class="close-btn" onclick="closeModal('resultModal')">Quét tiếp ➔</button>
+    </div>
+    <div class="score-card">
+      <div class="total-score" id="resTotal">0.00 đ</div>
+      <div class="sub-score">SBD: <b id="resSBD">---</b></div>
+      <div class="sub-score">Mã đề: <b id="resMaDe">---</b></div>
+      <div class="sub-score">Phần I (ABCD): <b id="resP1">0.00</b></div>
+      <div class="sub-score">Phần II (Đ/S): <b id="resP2">0.00</b></div>
+      <div class="sub-score">Phần III (TLN): <b id="resP3">0.00</b></div>
+      <div class="sub-score">
+        P.IV (Tự luận): 
+        <input type="number" id="resP4Input" step="0.25" value="0" style="width:65px; padding:3px 6px; margin:0; display:inline-block;" oninput="recalcWithEssay()">
+      </div>
+    </div>
+    <canvas id="gradedCanvas" class="preview-img"></canvas>
+    <button class="btn-primary" onclick="saveCurrentResult()">💾 LƯU KẾT QUẢ & QUÉT BÀI TIẾP</button>
+  </div>
+
+  <!-- Modal Nhập Đáp Án -->
+  <div id="keyModal" class="modal">
+    <div class="modal-header">
+      <div class="modal-title">THIẾT LẬP ĐÁP ÁN CHUẨN</div>
+      <button class="close-btn" onclick="closeModal('keyModal')">Đóng</button>
+    </div>
+    <label style="font-size:13px; margin-bottom:4px;">Mã đề (3 chữ số, VD: 101):</label>
+    <input type="text" id="keyMaDe" value="101">
+    <label style="font-size:13px; margin-bottom:4px;">Phần I - 12 câu ABCD (Viết liền 12 chữ cái):</label>
+    <input type="text" id="keyP1" value="ABCDABCDABCD">
+    <label style="font-size:13px; margin-bottom:4px;">Phần II - Đúng/Sai (Mỗi câu 4 ký tự Đ/S, cách nhau dấu phẩy):</label>
+    <input type="text" id="keyP2" value="ĐSĐS,SĐSĐ,ĐĐSS,SSĐĐ">
+    <label style="font-size:13px; margin-bottom:4px;">Phần III - Trả lời ngắn (Cách nhau bởi dấu chấm phẩy ; ):</label>
+    <input type="text" id="keyP3" value="1,5;-2;0,25;10;3,14;5">
+    <button class="btn-primary" onclick="saveAnswerKey()">LƯU ĐÁP ÁN MÃ ĐỀ NÀY</button>
+  </div>
+
+  <!-- Modal Lịch sử & Xuất Excel -->
+  <div id="historyModal" class="modal">
+    <div class="modal-header">
+      <div class="modal-title">DANH SÁCH BÀI ĐÃ CHẤM</div>
+      <button class="close-btn" onclick="closeModal('historyModal')">Đóng</button>
+    </div>
+    <div id="historyList" style="flex:1; overflow-y:auto; font-size:13px; margin-bottom:12px;"></div>
+    <button class="btn-primary" onclick="exportToExcel()">📥 XUẤT FILE EXCEL (.XLSX)</button>
+  </div>
+
+<script>
+const video = document.getElementById('video');
+const overlay = document.getElementById('overlay');
+const ctx = overlay.getContext('2d', { willReadFrequently: true });
+let autoScan = true;
+let stableFrames = 0;
+let isModalOpen = false;
+let currentScanData = null;
+let gradedHistory = JSON.parse(localStorage.getItem('qm2025_history') || '[]');
+let answerKeys = JSON.parse(localStorage.getItem('qm2025_keys') || JSON.stringify({
+  "101": { p1: "ABCDABCDABCD", p2: ["ĐSĐS","SĐSĐ","ĐĐSS","SSĐĐ"], p3: ["1,5","-2","0,25","10","3,14","5"] }
+}));
+
+document.getElementById('countBadge').innerText = gradedHistory.length;
+
+// 1. Khởi động Camera sau của iPhone với cấu hình tương thích Safari 100%
+async function startCamera() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+      audio: false
+    });
+    video.srcObject = stream;
+    video.onloadedmetadata = () => {
+      video.play();
+      requestAnimationFrame(scanLoop);
+    };
+  } catch (err) {
+    alert("Không thể mở Camera! Hãy chắc chắn bạn mở bằng trình duyệt Safari và bấm 'Cho phép' Camera.");
+  }
+}
+
+// 2. Vòng lặp vẽ Khung ngắm chuẩn tỷ lệ A4 & Tự động kiểm tra độ đen của 4 góc phiếu
+function getGuideBox(w, h) {
+  const padX = w * 0.07;
+  const boxW = w - padX * 2;
+  const boxH = Math.min(h * 0.74, boxW * 1.414);
+  const padY = (h - boxH) / 2 - 15;
+  return { x: padX, y: padY, w: boxW, h: boxH };
+}
+
+function checkCornerDarkness(imgData, w, cx, cy, size) {
+  let darkCount = 0, total = 0;
+  for (let y = Math.floor(cy - size/2); y < cy + size/2; y += 2) {
+    for (let x = Math.floor(cx - size/2); x < cx + size/2; x += 2) {
+      const idx = (y * w + x) * 4;
+      const lum = 0.299 * imgData[idx] + 0.587 * imgData[idx+1] + 0.114 * imgData[idx+2];
+      if (lum < 95) darkCount++;
+      total++;
+    }
+  }
+  return (darkCount / (total || 1)) > 0.28; // Có mốc vuông đen ở góc
+}
+
+function scanLoop() {
+  if (!isModalOpen && video.readyState === video.HAVE_ENOUGH_DATA) {
+    overlay.width = video.videoWidth;
+    overlay.height = video.videoHeight;
+    const w = overlay.width, h = overlay.height;
+    ctx.drawImage(video, 0, 0, w, h);
+
+    const box = getGuideBox(w, h);
+    const frameData = ctx.getImageData(0, 0, w, h).data;
+    const cSize = Math.floor(box.w * 0.065);
+
+    // Tọa độ 4 góc định vị của phiếu QM2025
+    const corners = [
+      { x: box.x + cSize*0.6, y: box.y + cSize*0.6 },
+      { x: box.x + box.w - cSize*0.6, y: box.y + cSize*0.6 },
+      { x: box.x + box.w - cSize*0.6, y: box.y + box.h - cSize*0.6 },
+      { x: box.x + cSize*0.6, y: box.y + box.h - cSize*0.6 }
+    ];
+
+    let lockedCount = 0;
+    // Làm tối viền ngoài khung ngắm
+    ctx.fillStyle = "rgba(0,0,0,0.45)";
+    ctx.fillRect(0, 0, w, box.y);
+    ctx.fillRect(0, box.y + box.h, w, h - (box.y + box.h));
+
+    // Vẽ khung ngắm A4 và 4 ô bắt điểm góc
+    ctx.strokeStyle = "rgba(255,255,255,0.6)";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(box.x, box.y, box.w, box.h);
+
+    corners.forEach(c => {
+      const isLocked = checkCornerDarkness(frameData, w, c.x, c.y, cSize);
+      if (isLocked) lockedCount++;
+      ctx.strokeStyle = isLocked ? "#30d158" : "#ff453a";
+      ctx.lineWidth = 6;
+      ctx.strokeRect(c.x - cSize/2, c.y - cSize/2, cSize, cSize);
+    });
+
+    const badge = document.getElementById('scanStatus');
+    if (lockedCount === 4) {
+      badge.innerText = "Đã bắt 4 góc! Giữ im...";
+      badge.className = "status-badge ready";
+      if (autoScan) {
+        stableFrames++;
+        if (stableFrames >= 10) { // Giữ ổn định ~0.25s là tự chụp chấm
+          stableFrames = 0;
+          manualCaptureAndGrade();
+        }
+      }
+    } else {
+      stableFrames = 0;
+      badge.innerText = `Bắt góc: ${lockedCount}/4 (Hoặc bấm nút Trắng)`;
+      badge.className = "status-badge";
+    }
+  }
+  requestAnimationFrame(scanLoop);
+}
+
+// 3. Hàm Chụp & Chấm điểm trực tiếp (Dùng chung cho cả Tự động & Bấm nút chụp)
+function manualCaptureAndGrade() {
+  if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
+  isModalOpen = true;
+  
+  const w = video.videoWidth, h = video.videoHeight;
+  const box = getGuideBox(w, h);
+  const gCanvas = document.getElementById('gradedCanvas');
+  gCanvas.width = 1000;
+  gCanvas.height = 1414; // Tỷ lệ chuẩn phiếu QM2025 A4
+  const gCtx = gCanvas.getContext('2d', { willReadFrequently: true });
+
+  // Cắt vùng phiếu trong khung ngắm đưa về chuẩn 1000x1414
+  gCtx.drawImage(video, box.x, box.y, box.w, box.h, 0, 0, 1000, 1414);
+  const imgData = gCtx.getImageData(0, 0, 1000, 1414).data;
+
+  // Hàm đo độ đậm của 1 ô tròn tại tọa độ (cx, cy) trên phiếu 1000x1414
+  function getBubbleDarkness(cx, cy, r = 11) {
+    let sum = 0, count = 0;
+    for (let y = Math.floor(cy - r); y <= cy + r; y++) {
+      for (let x = Math.floor(cx - r); x <= cx + r; x++) {
+        if ((x - cx)*(x - cx) + (y - cy)*(y - cy) <= r*r) {
+          const i = (y * 1000 + x) * 4;
+          const gray = 0.299 * imgData[i] + 0.587 * imgData[i+1] + 0.114 * imgData[i+2];
+          sum += (255 - gray); // Càng tô đen giá trị càng cao
+          count++;
+        }
+      }
+    }
+    return sum / (count || 1);
+  }
+
+  // Hàm chọn ô được tô đậm nhất trong 1 nhóm lựa chọn
+  function pickMarkedBubble(coords) {
+    const scores = coords.map(c => getBubbleDarkness(c.x, c.y));
+    const maxVal = Math.max(...scores);
+    const minVal = Math.min(...scores);
+    if (maxVal - minVal < 26) return -1; // Học sinh bỏ trống không tô
+    return scores.indexOf(maxVal);
+  }
+
+  const tpl = document.getElementById('tplSelect').value;
+  // Đọc Mã đề (3 cột góc phải trên)
+  let maDe = "";
+  for (let col = 0; col < 3; col++) {
+    const colCoords = [];
+    for (let row = 0; row < 10; row++) {
+      colCoords.push({ x: 855 + col * 28, y: 122 + row * 24.5 });
+    }
+    const picked = pickMarkedBubble(colCoords);
+    maDe += (picked >= 0 ? picked : "0");
+  }
+  const activeKey = answerKeys[maDe] || Object.values(answerKeys)[0];
+
+  // Đọc SBD (6 cột kế bên Mã đề)
+  let sbd = "";
+  for (let col = 0; col < 6; col++) {
+    const colCoords = [];
+    for (let row = 0; row < 10; row++) {
+      colCoords.push({ x: 642 + col * 28, y: 122 + row * 24.5 });
+    }
+    const picked = pickMarkedBubble(colCoords);
+    sbd += (picked >= 0 ? picked : "0");
+  }
+
+  // Chấm PHẦN I (12 câu: Cột 1 câu 1-10, Cột 2 câu 11-12 theo đúng PDF của thầy)
+  let scoreP1 = 0;
+  for (let q = 0; q < 12; q++) {
+    const isCol2 = q >= 10;
+    const baseX = isCol2 ? 360 : 120;
+    const baseY = 438 + (isCol2 ? (q - 10) : q) * 28.5;
+    const rowCoords = [0,1,2,3].map(opt => ({ x: baseX + opt * 38, y: baseY }));
+    const picked = pickMarkedBubble(rowCoords);
+    const ansIdx = "ABCD".indexOf((activeKey.p1[q] || "A").toUpperCase());
+
+    if (picked === ansIdx) {
+      scoreP1 += 0.25;
+      drawCircle(gCtx, rowCoords[picked].x, rowCoords[picked].y, "#00e676");
+    } else {
+      if (picked >= 0) drawCircle(gCtx, rowCoords[picked].x, rowCoords[picked].y, "#ff1744");
+      if (ansIdx >= 0) drawCircle(gCtx, rowCoords[ansIdx].x, rowCoords[ansIdx].y, "#ffd600", true);
+    }
+  }
+
+  // Chấm PHẦN II (4 câu cho mẫu 12-04-06, hoặc 2 câu cho mẫu 12-02-04)
+  const numP2 = tpl === "12_04_06" ? 4 : 2;
+  let scoreP2 = 0;
+  for (let q = 0; q < numP2; q++) {
+    let correctSub = 0;
+    const qBaseX = 118 + q * 145;
+    const keySub = activeKey.p2[q] || "ĐSĐS";
+    for (let sub = 0; sub < 4; sub++) {
+      const yPos = 815 + sub * 28.5;
+      const pairCoords = [{ x: qBaseX, y: yPos }, { x: qBaseX + 42, y: yPos }];
+      const picked = pickMarkedBubble(pairCoords);
+      const ansIdx = (keySub[sub] === "S" || keySub[sub] === "s") ? 1 : 0;
+      if (picked === ansIdx) {
+        correctSub++;
+        drawCircle(gCtx, pairCoords[picked].x, pairCoords[picked].y, "#00e676");
+      } else {
+        if (picked >= 0) drawCircle(gCtx, pairCoords[picked].x, pairCoords[picked].y, "#ff1744");
+        drawCircle(gCtx, pairCoords[ansIdx].x, pairCoords[ansIdx].y, "#ffd600", true);
+      }
+    }
+    if (correctSub === 1) scoreP2 += 0.1;
+    else if (correctSub === 2) scoreP2 += 0.25;
+    else if (correctSub === 3) scoreP2 += 0.5;
+    else if (correctSub === 4) scoreP2 += 1.0;
+  }
+
+  // Chấm PHẦN III (6 câu cho mẫu 12-04-06, hoặc 4 câu cho mẫu 12-02-04)
+  const numP3 = tpl === "12_04_06" ? 6 : 4;
+  const chars = ['-', ',', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+  let scoreP3 = 0;
+  for (let q = 0; q < numP3; q++) {
+    const qBaseX = 95 + q * 142;
+    let studentStr = "";
+    for (let c = 0; c < 4; c++) {
+      const colCoords = chars.map((_, rIdx) => ({ x: qBaseX + c * 28, y: 1030 + rIdx * 25.5 }));
+      const picked = pickMarkedBubble(colCoords);
+      if (picked >= 0) {
+        studentStr += chars[picked];
+        drawCircle(gCtx, colCoords[picked].x, colCoords[picked].y, "#00e676");
+      }
+    }
+    const target = (activeKey.p3[q] || "").trim().replace('.', ',');
+    if (studentStr === target && target !== "") {
+      scoreP3 += 0.5;
+    }
+  }
+
+  currentScanData = { sbd, maDe, scoreP1, scoreP2, scoreP3, scoreP4: 0, total: scoreP1 + scoreP2 + scoreP3 };
+  
+  // In điểm màu đỏ trực tiếp lên khung Điểm của phiếu
+  gCtx.fillStyle = "#ff1744";
+  gCtx.font = "bold 34px sans-serif";
+  gCtx.fillText(`TỔNG: ${currentScanData.total.toFixed(2)} đ`, 670, 560);
+
+  // Hiển thị lên Modal
+  document.getElementById('resSBD').innerText = sbd;
+  document.getElementById('resMaDe').innerText = maDe;
+  document.getElementById('resP1').innerText = scoreP1.toFixed(2);
+  document.getElementById('resP2').innerText = scoreP2.toFixed(2);
+  document.getElementById('resP3').innerText = scoreP3.toFixed(2);
+  document.getElementById('resP4Input').value = 0;
+  document.getElementById('resTotal').innerText = currentScanData.total.toFixed(2) + " đ";
+  document.getElementById('resultModal').classList.add('open');
+}
+
+function drawCircle(gCtx, x, y, color, isSmall = false) {
+  gCtx.beginPath();
+  gCtx.arc(x, y, isSmall ? 6 : 13, 0, Math.PI * 2);
+  gCtx.strokeStyle = color;
+  gCtx.lineWidth = 3;
+  if (isSmall) { gCtx.fillStyle = color; gCtx.fill(); }
+  else gCtx.stroke();
+}
+
+function recalcWithEssay() {
+  if (!currentScanData) return;
+  const p4 = parseFloat(document.getElementById('resP4Input').value) || 0;
+  currentScanData.scoreP4 = p4;
+  currentScanData.total = currentScanData.scoreP1 + currentScanData.scoreP2 + currentScanData.scoreP3 + p4;
+  document.getElementById('resTotal').innerText = currentScanData.total.toFixed(2) + " đ";
+}
+
+function saveCurrentResult() {
+  if (!currentScanData) return;
+  gradedHistory.push({ ...currentScanData, time: new Date().toLocaleTimeString() });
+  localStorage.setItem('qm2025_history', JSON.stringify(gradedHistory));
+  document.getElementById('countBadge').innerText = gradedHistory.length;
+  closeModal('resultModal');
+}
+
+function toggleAutoScan() {
+  autoScan = !autoScan;
+  document.getElementById('autoBtn').classList.toggle('active', autoScan);
+  document.getElementById('autoTxt').innerText = autoScan ? "ĐANG BẬT" : "ĐANG TẮT";
+}
+
+function openKeyModal() { isModalOpen = true; document.getElementById('keyModal').classList.add('open'); }
+function openHistoryModal() {
+  isModalOpen = true;
+  const list = document.getElementById('historyList');
+  list.innerHTML = gradedHistory.map((item, idx) =>
+    `<div style="padding:8px; border-bottom:1px solid #333; display:flex; justify-content:space-between;">
+      <span>#${idx+1} | SBD: <b>${item.sbd}</b> | Mã: ${item.maDe}</span>
+      <b style="color:#30d158">${item.total.toFixed(2)} đ</b>
+    </div>`
+  ).join('') || "Chưa có bài chấm nào.";
+  document.getElementById('historyModal').classList.add('open');
+}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); isModalOpen = false; }
+
+function saveAnswerKey() {
+  const code = document.getElementById('keyMaDe').value.trim();
+  answerKeys[code] = {
+    p1: document.getElementById('keyP1').value.trim(),
+    p2: document.getElementById('keyP2').value.split(',').map(s => s.trim()),
+    p3: document.getElementById('keyP3').value.split(';').map(s => s.trim())
+  };
+  localStorage.setItem('qm2025_keys', JSON.stringify(answerKeys));
+  alert("Đã lưu đáp án mã đề " + code);
+  closeModal('keyModal');
+}
+
+function exportToExcel() {
+  if (!gradedHistory.length) return alert("Chưa có dữ liệu để xuất!");
+  const ws = XLSX.utils.json_to_sheet(gradedHistory.map((r, i) => ({
+    "STT": i + 1, "Số Báo Danh": r.sbd, "Mã Đề": r.maDe,
+    "Điểm Phần I": r.scoreP1, "Điểm Phần II": r.scoreP2,
+    "Điểm Phần III": r.scoreP3, "Điểm Tự Luận (P4)": r.scoreP4,
+    "TỔNG ĐIỂM": Number(r.total.toFixed(2)), "Giờ chấm": r.time
+  })));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "BangDiem_QM2025");
+  XLSX.writeFile(wb, "KetQua_ChamThi_QM2025.xlsx");
+}
+
+window.addEventListener('load', startCamera);
+</script>
 </body>
 </html>
