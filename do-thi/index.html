@@ -327,7 +327,7 @@
         ],
         frac21: [
             { name: "2 Cực trị (a>0)", vals: { a: "1", b: "-1", c: "1", d: "1", e: "-1" } },
-            { name: "2 Cực trị (a<0)", vals: { a: "-1", b: "2", c: "-4", d: "1", e: "-2" } },
+            { name: "2 Cực trị (a<0)", vals: { a: "-1", b: "2", c: "-4", d: "1", e: "-2" }, view: [-8, 8, 12, -12] },
             { name: "Không cực trị (a.d > 0)", vals: { a: "1", b: "1", c: "-2", d: "1", e: "1" } },
             { name: "Không cực trị (a.d < 0)", vals: { a: "-1", b: "1", c: "3", d: "1", e: "1" } }
         ]
@@ -344,12 +344,13 @@
             btn.className = 'btn-secondary';
             btn.style.cssText = "padding: 4px 8px; font-size: 0.8rem; border-radius: 4px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--panel); color: var(--text);";
             btn.innerText = item.name;
-            btn.onclick = () => applyPreset(item.vals);
+            btn.onclick = () => applyPreset(item.vals, item.view);
             container.appendChild(btn);
         });
     }
 
-    function applyPreset(vals) {
+    let presetViewActive = false;
+    function applyPreset(vals, view) {
         ['a', 'b', 'c', 'd', 'e'].forEach(p => {
             if (vals[p] !== undefined) {
                 document.getElementById(`coef-${p}`).value = vals[p];
@@ -357,6 +358,13 @@
             }
         });
         updateAll();
+        if (view) {
+            board.setBoundingBox(view, true);
+            presetViewActive = true;
+        } else if (presetViewActive) {
+            board.setBoundingBox(DEFAULT_BOUNDING_BOX, true);
+            presetViewActive = false;
+        }
     }
 
     function toggleExamMode() {
